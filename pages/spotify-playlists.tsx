@@ -30,42 +30,8 @@ export async function getServerSideProps(context) {
 
 	const accessToken = getSpotifyUserAccessToken(authorizationCode)
 
-	const spotifyPlaylistsURL = 'https://api.spotify.com/v1/me/playlists?limit=10'
-	const spotifyFetchOptions = {
-		method: 'GET',
-		headers: {
-			'Accept': 'application/json',
-			'Content-Type': 'application/json',
-			'Authorization': 'Bearer ' + accessToken
-		}
-	}
-	const playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
-	const userPlaylistsJson = await playlistResponse.json()
-	const playlistTrackPromises = userPlaylistsJson.items.tracks.href.map((tracksURL) => {
-		const fields = 'items(track(name))'
-		const tracksURLWithQuery = tracksURL +
-			'?fields=' + fields +
-			'&limit=' + SHORT_LIST_NUM_TRACKS
-		return fetch(tracksURLWithQuery, spotifyFetchOptions)
-	})
-	let userPlaylists = []
-	userPlaylistsJson.items.forEach((playlist) =>
-		userPlaylists.push({
-			name: playlist.name,
-			image: playlist.images[0].url,
-			id: playlist.id,
-		})
-	)
-	userPlaylists.forEach((playlist) => {
-		const fields = 'items(track(name))'
-		const spotifyPlaylistTracksURL = playlist.tracksURL +
-			'?fields=' + fields +
-			'&limit=' + SHORT_LIST_NUM_TRACKS
-		const playlistTracksResponse = await fetch(
-			spotifyPlaylistTracksURL, spotifyFetchOptions
-		)
-		const trackTitlesShortList = []
-	})
+	const userPlaylists = getSpotifyUserPlaylists(accessToken)
+
 	return {
 		props: {
 			userPlaylists
@@ -139,6 +105,48 @@ async function getSpotifyUserAccessToken(authorizationCode: string) {
 	const response = await fetch(spotifyTokenURL, tokenFetchOptions)
 	const result = await response.json()
 	return result.access_token
+}
+
+async function getSpotifyUserPlaylists(accessToken) {
+	// Request 10 playlists owned or followed by the current user
+	const spotifyPlaylistsURL = 'https://api.spotify.com/v1/me/playlists?limit=10'
+	const spotifyFetchOptions = {
+		method: 'GET',
+		headers: {
+			'Accept': 'application/json',
+			'Content-Type': 'application/json',
+			'Authorization': 'Bearer ' + accessToken
+		}
+	}
+	const playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
+	const userPlaylistsJson = await playlistResponse.json()
+	const playlistTrackPromises = userPlaylistsJson.items.tracks.href.map((tracksURL) => {
+		const fields = 'items(track(name))'
+		const tracksURLWithQuery = tracksURL +
+			'?fields=' + fields +
+			'&limit=' + SHORT_LIST_NUM_TRACKS
+		return fetch(tracksURLWithQuery, spotifyFetchOptions)
+	})
+	let userPlaylists = []
+	userPlaylistsJson.items.forEach((playlist) =>
+		userPlaylists.push({
+			name: playlist.name,
+			image: playlist.images[0].url,
+			id: playlist.id,
+		})
+	)
+	userPlaylists.forEach((playlist) => {
+		const fields = 'items(track(name))'
+		const spotifyPlaylistTracksURL = playlist.tracksURL +
+			'?fields=' + fields +
+			'&limit=' + SHORT_LIST_NUM_TRACKS
+		const playlistTracksResponse = await fetch(
+			spotifyPlaylistTracksURL, spotifyFetchOptions
+		)
+		const trackTitlesShortList = []
+	})
+
+	return userPlaylists
 }
 
 export default SpotifyPlaylists

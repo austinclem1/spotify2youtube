@@ -49,7 +49,11 @@ function PlaylistCard(props) {
 						<Col xs={4}><Image src={playlist.image} fluid /></Col>
 						<Col xs={8} className='align-self-center'>
 							<Card.Text>
-								Song Names, and lots of em. So many songs here. Songs, Songs, Songs, Songs, Songs, Songs, Songs, Songs, Songs, Songs,
+								<ListGroup>
+									{playlist.tracks.map((track) => 
+										<ListGroup.Item>{track}</ListGroup.Item>
+									)}
+								</ListGroup>
 							</Card.Text>
 						</Col>
 					</Row>
@@ -60,8 +64,9 @@ function PlaylistCard(props) {
 }
 
 function SpotifyPlaylists({ userPlaylists }) {
-	const playlistListItems = userPlaylists.map((playlist) =>
-		<PlaylistCard playlist={playlist} />
+	const playlistListItems = userPlaylists.
+		filter((playlist) => playlist.tracks.length > 0).
+		map((playlist) => <PlaylistCard playlist={playlist} />
 	)
 	return(
 		<Container className='text-center'>

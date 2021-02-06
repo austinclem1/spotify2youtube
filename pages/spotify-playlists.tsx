@@ -38,9 +38,13 @@ export async function getServerSideProps(context) {
 
 function PlaylistCard(props) {
 	const { playlist } = props
+	const handleClick = (eventKey) => {
+		playlist.tracks.push('a new track')
+		console.log(JSON.stringify(props))
+	}
 	return(
 		<Col xs={12} lg={6}>
-			<Card bg='light' className='my-3 mx-1'>
+			<Card bg='light' className='my-3 mx-1' onClick={handleClick}>
 				<Card.Header className='text-center'>
 					<strong>{playlist.name}</strong>
 				</Card.Header>
@@ -57,6 +61,7 @@ function PlaylistCard(props) {
 							</Card.Text>
 						</Col>
 					</Row>
+					<a className='stretched-link' role='button' />
 				</Card.Body>
 		</Card>
 	</Col>

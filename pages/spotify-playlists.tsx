@@ -10,7 +10,14 @@ import styles from '../styles/spotify-playlists.module.css'
 
 const SHORT_LIST_NUM_TRACKS = 8
 
+function doSomethin() {
+	console.log('hi')
+}
+
 export async function getServerSideProps(context) {
+	// Check if we've been granted an authorization code
+	// Without it, we can't get an access token for the user's
+	// Spotify playlists etc.
 	const authorizationCode = context.query.code
 	if (!authorizationCode) {
 		return {
@@ -20,29 +27,8 @@ export async function getServerSideProps(context) {
 			}
 		}
 	}
-	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
-	const combinedCodeBuffer = Buffer.from(
-		process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID + ':' +
-		process.env.SPOTIFY_CLIENT_SECRET,
-		'utf-8'
-	)
-	const formBody = encodeURIComponent('grant_type') + '=' +
-		encodeURIComponent('authorization_code') + '&' +
-		encodeURIComponent('code') + '=' +
-		encodeURIComponent(authorizationCode) + '&' +
-		encodeURIComponent('redirect_uri') + '=' +
-		encodeURIComponent('http://localhost:3000/spotify-playlists')
-	const tokenFetchOptions = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-			'Authorization': 'Basic ' + combinedCodeBuffer.toString('base64')
-		},
-		body: formBody
-	}
-	const response = await fetch(spotifyTokenURL, tokenFetchOptions)
-	const result = await response.json()
-	const accessToken = result.access_token
+
+	const accessToken = getSpotifyUserAccessToken(authorizationCode)
 
 	const spotifyPlaylistsURL = 'https://api.spotify.com/v1/me/playlists?limit=10'
 	const spotifyFetchOptions = {
@@ -124,6 +110,35 @@ function SpotifyPlaylists({ userPlaylists }) {
 			</Row>
 		</Container>
 	)
+}
+
+async function getSpotifyUserAccessToken(authorizationCode: string) {
+	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
+
+	// TODO: We can probably do this base64 encoding ahead of time
+	const combinedCodeBuffer = Buffer.from(
+		process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID + ':' +
+		process.env.SPOTIFY_CLIENT_SECRET,
+		'utf-8'
+	)
+	const formBody = encodeURIComponent('grant_type') + '=' +
+		encodeURIComponent('authorization_code') + '&' +
+		encodeURIComponent('code') + '=' +
+		encodeURIComponent(authorizationCode) + '&' +
+		encodeURIComponent('redirect_uri') + '=' +
+		encodeURIComponent('http://localhost:3000/spotify-playlists')
+
+	const tokenFetchOptions = {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Authorization': 'Basic ' + combinedCodeBuffer.toString('base64')
+		},
+		body: formBody
+	}
+	const response = await fetch(spotifyTokenURL, tokenFetchOptions)
+	const result = await response.json()
+	return result.access_token
 }
 
 export default SpotifyPlaylists

@@ -5,14 +5,11 @@ import Container from 'react-bootstrap/Container'
 import Col from 'react-bootstrap/Col'
 import Image from 'react-bootstrap/Image'
 import Jumbotron from 'react-bootstrap/Jumbotron'
+import ListGroup from 'react-bootstrap/ListGroup'
 import Row from 'react-bootstrap/Row'
 import styles from '../styles/spotify-playlists.module.css'
 
 const SHORT_LIST_NUM_TRACKS = 8
-
-function doSomethin() {
-	console.log('hi')
-}
 
 export async function getServerSideProps(context) {
 	// Check if we've been granted an authorization code
@@ -28,9 +25,9 @@ export async function getServerSideProps(context) {
 		}
 	}
 
-	const accessToken = getSpotifyUserAccessToken(authorizationCode)
+	const accessToken = await getSpotifyUserAccessToken(authorizationCode)
 
-	const userPlaylists = getSpotifyUserPlaylists(accessToken)
+	const userPlaylists = await getSpotifyUserPlaylists(accessToken)
 
 	return {
 		props: {
@@ -120,30 +117,42 @@ async function getSpotifyUserPlaylists(accessToken) {
 	}
 	const playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
 	const userPlaylistsJson = await playlistResponse.json()
-	const playlistTrackPromises = userPlaylistsJson.items.tracks.href.map((tracksURL) => {
+	let userPlaylists = []
+	userPlaylistsJson.items.forEach((playlist) => {
+		userPlaylists.push({
+			name: playlist.name,
+			image: playlist.images[0] ? playlist.images[0].url : null,
+			id: playlist.id,
+		})
+	})
+	const playlistTrackPromises: Promise<Response>[] = userPlaylistsJson.items.map((playlist) => {
+		const tracksURL = playlist.tracks.href
 		const fields = 'items(track(name))'
 		const tracksURLWithQuery = tracksURL +
 			'?fields=' + fields +
 			'&limit=' + SHORT_LIST_NUM_TRACKS
 		return fetch(tracksURLWithQuery, spotifyFetchOptions)
 	})
-	let userPlaylists = []
-	userPlaylistsJson.items.forEach((playlist) =>
-		userPlaylists.push({
-			name: playlist.name,
-			image: playlist.images[0].url,
-			id: playlist.id,
-		})
-	)
-	userPlaylists.forEach((playlist) => {
-		const fields = 'items(track(name))'
-		const spotifyPlaylistTracksURL = playlist.tracksURL +
-			'?fields=' + fields +
-			'&limit=' + SHORT_LIST_NUM_TRACKS
-		const playlistTracksResponse = await fetch(
-			spotifyPlaylistTracksURL, spotifyFetchOptions
-		)
-		const trackTitlesShortList = []
+	const allTrackResponses = await Promise.allSettled(playlistTrackPromises)
+	const allTrackParsePromises = allTrackResponses.map((result) => {
+		if (result.status === 'fulfilled') {
+			return result.value.json()
+		} else {
+			return null
+		}
+	})
+	const allParsedTracksResults = await Promise.allSettled(allTrackParsePromises)
+	// const allParsedTracks = allParsedTracksResults.map((result) => {
+	// 	if (result.status === 'fulfilled') {
+	// 		return result.value
+	// 	} else {
+	// 		return null
+	// 	}
+	// })
+	allParsedTracksResults.forEach((result, index) => {
+		if (result.status === 'fulfilled') {
+			userPlaylists[index]['tracks'] = result.value.items.map((item) => item.track.name)
+		}
 	})
 
 	return userPlaylists

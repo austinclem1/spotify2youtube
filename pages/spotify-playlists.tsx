@@ -12,13 +12,6 @@ import React, { useState } from 'react'
 
 const SHORT_LIST_NUM_TRACKS = 8
 
-type PlaylistCardProps = {
-	playlist: any,
-}
-type PlaylistCardState = {
-	isSelected: boolean,
-}
-
 export async function getServerSideProps(context) {
 	// Check if we've been granted an authorization code
 	// Without it, we can't get an access token for the user's
@@ -45,13 +38,14 @@ export async function getServerSideProps(context) {
 }
 
 function PlaylistCard(props) {
-	const [selected, setSelected] = useState(false)
-	const handleClick = () => {
-		setSelected(!selected)
-	}
-	const color = selected ? 'primary' : 'light'
-	const cardWidth = selected ? 12 : 6
 	const { playlist } = props
+	const [isSelected, setIsSelected] = useState(false)
+	const handleClick = () => {
+		setIsSelected(!isSelected)
+	}
+	const color = isSelected ? 'primary' : 'light'
+	const cardWidth = isSelected ? 12 : 6
+	const numTracksToShow = 5
 	return(
 		<Col xs={12} lg={cardWidth}>
 			<Card bg={color} className='my-3 mx-1' onClick={() => handleClick()}>
@@ -64,9 +58,12 @@ function PlaylistCard(props) {
 						<Col xs={8} className='align-self-center'>
 							<Card.Text>
 								<ListGroup>
-									{playlist.tracks.map((track) => 
+									{playlist.tracks.slice(numTracksToShow).map((track) => 
 										<ListGroup.Item variant={color}>{track}</ListGroup.Item>
 									)}
+									{!isSelected && playlist.tracks.length > numTracksToShow &&
+										<ListGroup.Item variant={color}>{playlist.tracks.length - numTracksToShow} More...</ListGroup.Item>
+									}
 								</ListGroup>
 							</Card.Text>
 						</Col>

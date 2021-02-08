@@ -8,7 +8,7 @@ import Jumbotron from 'react-bootstrap/Jumbotron'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Row from 'react-bootstrap/Row'
 import styles from '../styles/spotify-playlists.module.css'
-import React from 'react'
+import React, { useState } from 'react'
 
 const SHORT_LIST_NUM_TRACKS = 8
 
@@ -44,46 +44,38 @@ export async function getServerSideProps(context) {
 	}
 }
 
-class PlaylistCard extends React.Component<PlaylistCardProps, PlaylistCardState> {
-	constructor(props) {
-		super(props)
-		this.state = {
-			isSelected: false,
-		}
+function PlaylistCard(props) {
+	const [selected, setSelected] = useState(false)
+	const handleClick = () => {
+		setSelected(!selected)
 	}
-	handleClick() {
-		this.setState({
-			isSelected: !this.state.isSelected
-		})
-	}
-	render() {
-		const color = this.state.isSelected ? 'primary' : 'light'
-		const { playlist } = this.props
-		return(
-			<Col xs={12} lg={this.state.isSelected ? 12 : 6}>
-				<Card bg={color} className='my-3 mx-1' onClick={() => this.handleClick()}>
-					<Card.Header className='text-center'>
-						<strong>{playlist.name}</strong>
-					</Card.Header>
-					<Card.Body>
-						<Row className='align-middle'>
-							<Col xs={4}><Image src={playlist.image} fluid /></Col>
-							<Col xs={8} className='align-self-center'>
-								<Card.Text>
-									<ListGroup>
-										{playlist.tracks.map((track) => 
-											<ListGroup.Item variant={color}>{track}</ListGroup.Item>
-										)}
-									</ListGroup>
-								</Card.Text>
-							</Col>
-						</Row>
-						<a className='stretched-link' role='button' />
-					</Card.Body>
-			</Card>
-		</Col>
-		)
-	}
+	const color = selected ? 'primary' : 'light'
+	const cardWidth = selected ? 12 : 6
+	const { playlist } = props
+	return(
+		<Col xs={12} lg={cardWidth}>
+			<Card bg={color} className='my-3 mx-1' onClick={() => handleClick()}>
+				<Card.Header className='text-center'>
+					<strong>{playlist.name}</strong>
+				</Card.Header>
+				<Card.Body>
+					<Row className='align-middle'>
+						<Col xs={4}><Image src={playlist.image} fluid /></Col>
+						<Col xs={8} className='align-self-center'>
+							<Card.Text>
+								<ListGroup>
+									{playlist.tracks.map((track) => 
+										<ListGroup.Item variant={color}>{track}</ListGroup.Item>
+									)}
+								</ListGroup>
+							</Card.Text>
+						</Col>
+					</Row>
+					<a className='stretched-link' role='button' />
+				</Card.Body>
+		</Card>
+	</Col>
+	)
 }
 
 function SpotifyPlaylists({ userPlaylists }) {

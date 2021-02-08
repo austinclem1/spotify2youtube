@@ -43,10 +43,14 @@ function TrackList(props) {
 	if (isSelected) {
 		return(
 			<ListGroup>
+				<ListGroup horizontal>
+					<ListGroup.Item variant={'dark'} className='p-1 w-50'><strong>Title</strong></ListGroup.Item>
+					<ListGroup.Item variant={'dark'} className='p-1 w-50'><strong>Artist</strong></ListGroup.Item>
+				</ListGroup>
 				{tracks.map((track) => 
 					<ListGroup horizontal>
-						<ListGroup.Item variant={color} className='p-1 w-50'>{track}</ListGroup.Item>
-						<ListGroup.Item variant={color} className='p-1 w-50'>Hi</ListGroup.Item>
+						<ListGroup.Item variant={color} className='p-1 w-50'>{track.name}</ListGroup.Item>
+						<ListGroup.Item variant={color} className='p-1 w-50'>{track.artists}</ListGroup.Item>
 					</ListGroup>
 				)}
 			</ListGroup>
@@ -55,7 +59,7 @@ function TrackList(props) {
 		return(
 			<ListGroup>
 				{tracks.slice(0, numTracksShown).map((track) => 
-					<ListGroup.Item variant={color} className='p-1'>{track}</ListGroup.Item>
+					<ListGroup.Item variant={color} className='p-1'>{track.name}</ListGroup.Item>
 				)}
 				{tracks.length > numTracksShown + 1 &&
 					<ListGroup.Item variant={color} className='p-1'>{tracks.length - numTracksShown} More...</ListGroup.Item>
@@ -167,7 +171,7 @@ async function getSpotifyUserPlaylists(accessToken) {
 	})
 	const playlistTrackPromises: Promise<Response>[] = userPlaylistsJson.items.map((playlist) => {
 		const tracksURL = playlist.tracks.href
-		const fields = 'items(track(name),artists(name))'
+		const fields = 'items(track(name,artists(name)))'
 		const tracksURLWithQuery = tracksURL +
 			'?fields=' + fields +
 			'&limit=20'
@@ -194,7 +198,7 @@ async function getSpotifyUserPlaylists(accessToken) {
 			userPlaylists[index]['tracks'] = result.value.items.map((item) => {
 				return {
 					name: item.track.name,
-					artists: item.track.artists
+					artists: item.track.artists.map((artist) => artist.name).join(', ')
 				}
 			})
 		}

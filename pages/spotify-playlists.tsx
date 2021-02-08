@@ -80,7 +80,7 @@ function PlaylistCard(props) {
 	return(
 		<Col xs={12} lg={cardWidth} className='my-3 mx-0'>
 			<Card bg={color} className='h-100' onClick={() => handleClick()}>
-				<Card.Header className='text-center'>
+				<Card.Header className='text-center' as='h4'>
 					<strong>{playlist.name}</strong>
 				</Card.Header>
 				<Card.Body>

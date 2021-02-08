@@ -10,8 +10,6 @@ import Row from 'react-bootstrap/Row'
 import styles from '../styles/spotify-playlists.module.css'
 import React, { useState } from 'react'
 
-const SHORT_LIST_NUM_TRACKS = 8
-
 export async function getServerSideProps(context) {
 	// Check if we've been granted an authorization code
 	// Without it, we can't get an access token for the user's
@@ -37,6 +35,36 @@ export async function getServerSideProps(context) {
 	}
 }
 
+function TrackList(props) {
+	const { tracks, isSelected } = props
+	let numTracksShown = isSelected ? tracks.length : 5
+	const color = isSelected ? 'primary' : 'light'
+
+	if (isSelected) {
+		return(
+			<ListGroup>
+				{tracks.map((track) => 
+					<ListGroup horizontal>
+						<ListGroup.Item variant={color} className='p-1 w-50'>{track}</ListGroup.Item>
+						<ListGroup.Item variant={color} className='p-1 w-50'>Hi</ListGroup.Item>
+					</ListGroup>
+				)}
+			</ListGroup>
+		)
+	} else {
+		return(
+			<ListGroup>
+				{tracks.slice(0, numTracksShown).map((track) => 
+					<ListGroup.Item variant={color} className='p-1'>{track}</ListGroup.Item>
+				)}
+				{tracks.length > numTracksShown + 1 &&
+					<ListGroup.Item variant={color} className='p-1'>{tracks.length - numTracksShown} More...</ListGroup.Item>
+				}
+			</ListGroup>
+		)
+	}
+}
+
 function PlaylistCard(props) {
 	const { playlist } = props
 	const [isSelected, setIsSelected] = useState(false)
@@ -45,10 +73,9 @@ function PlaylistCard(props) {
 	}
 	const color = isSelected ? 'primary' : 'light'
 	const cardWidth = isSelected ? 12 : 6
-	const numTracksToShow = 5
 	return(
-		<Col xs={12} lg={cardWidth}>
-			<Card bg={color} className='my-3 mx-1' onClick={() => handleClick()}>
+		<Col xs={12} lg={cardWidth} className='my-3 mx-0'>
+			<Card bg={color} className='h-100' onClick={() => handleClick()}>
 				<Card.Header className='text-center'>
 					<strong>{playlist.name}</strong>
 				</Card.Header>
@@ -57,14 +84,10 @@ function PlaylistCard(props) {
 						<Col xs={4}><Image src={playlist.image} fluid /></Col>
 						<Col xs={8} className='align-self-center'>
 							<Card.Text>
-								<ListGroup>
-									{playlist.tracks.slice(numTracksToShow).map((track) => 
-										<ListGroup.Item variant={color}>{track}</ListGroup.Item>
-									)}
-									{!isSelected && playlist.tracks.length > numTracksToShow &&
-										<ListGroup.Item variant={color}>{playlist.tracks.length - numTracksToShow} More...</ListGroup.Item>
-									}
-								</ListGroup>
+								<TrackList 
+									tracks={playlist.tracks}
+									isSelected={isSelected}
+								/>
 							</Card.Text>
 						</Col>
 					</Row>
@@ -144,10 +167,10 @@ async function getSpotifyUserPlaylists(accessToken) {
 	})
 	const playlistTrackPromises: Promise<Response>[] = userPlaylistsJson.items.map((playlist) => {
 		const tracksURL = playlist.tracks.href
-		const fields = 'items(track(name))'
+		const fields = 'items(track(name),artists(name))'
 		const tracksURLWithQuery = tracksURL +
 			'?fields=' + fields +
-			'&limit=' + SHORT_LIST_NUM_TRACKS
+			'&limit=20'
 		return fetch(tracksURLWithQuery, spotifyFetchOptions)
 	})
 	const allTrackResponses = await Promise.allSettled(playlistTrackPromises)
@@ -168,7 +191,12 @@ async function getSpotifyUserPlaylists(accessToken) {
 	// })
 	allParsedTracksResults.forEach((result, index) => {
 		if (result.status === 'fulfilled') {
-			userPlaylists[index]['tracks'] = result.value.items.map((item) => item.track.name)
+			userPlaylists[index]['tracks'] = result.value.items.map((item) => {
+				return {
+					name: item.track.name,
+					artists: item.track.artists
+				}
+			})
 		}
 	})
 

@@ -70,20 +70,32 @@ function TrackList(props) {
 }
 
 function PlaylistCard(props) {
-	const { playlist } = props
+	const { playlist, order } = props
 	const [isSelected, setIsSelected] = useState(false)
+	const [currentOrder, setCurrentOrder] = useState(order)
 	const handleClick = () => {
+		// Even numbered order means the card is on the right (on large devices)
+		// When it's selected we want to push it's order to the left so it doesn't
+		// leave an empty gap behind
+		if (order % 2 === 0) {
+			if (isSelected) {
+				setCurrentOrder(currentOrder + 2)
+			} else {
+				setCurrentOrder(currentOrder - 2)
+			}
+		}
 		setIsSelected(!isSelected)
 	}
 	const color = isSelected ? 'primary' : 'light'
 	const cardWidth = isSelected ? 12 : 6
 	return(
-		<Col xs={12} lg={cardWidth} className='my-3 mx-0'>
-			<Card bg={color} className='h-100' onClick={() => handleClick()}>
+		<Col xs={{span: 12, order: order}} lg={{span: cardWidth, order: currentOrder}} className='my-3 mx-0'>
+			<Card bg={color} className='h-100' onClick={() => handleClick()} key={playlist.id}>
 				<Card.Header className='text-center' as='h4'>
 					<strong>{playlist.name}</strong>
 				</Card.Header>
 				<Card.Body>
+					<p>Current order: {currentOrder}</p>
 					<Row className='align-middle'>
 						<Col xs={4}><Image src={playlist.image} fluid /></Col>
 						<Col xs={8} className='align-self-center'>
@@ -105,7 +117,7 @@ function PlaylistCard(props) {
 function SpotifyPlaylists({ userPlaylists }) {
 	const playlistListItems = userPlaylists.
 		filter((playlist) => playlist.tracks.length > 0).
-		map((playlist) => <PlaylistCard playlist={playlist} />
+		map((playlist, index) => <PlaylistCard playlist={playlist} order={index + 1} />
 	)
 	return(
 		<Container className='text-center'>

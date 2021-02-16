@@ -107,7 +107,14 @@ function PlaylistCard(props) {
 	const { playlist, order, isSelected, setSelectedPlaylist } = props
 	useEffect(() => {
 		if (isSelected) {
-			cardRef.current.scrollIntoView()
+			const position = cardRef.current.getBoundingClientRect()
+			console.log(position)
+			// cardRef.current.scrollIntoView(scrollOptions)
+			window.scrollTo({
+				top: position.top + window.scrollY - 20,
+				left: 0,
+				behavior: 'smooth'
+			})
 		}
 	})
 	let currentOrder = order

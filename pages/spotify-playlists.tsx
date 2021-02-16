@@ -158,8 +158,8 @@ function SpotifyPlaylists({ userPlaylists }) {
 			<Row className='m-xs-1 m-sm-2 m-md-3 m-lg-4 m-xl-5'>
 				{playlistListItems}
 			</Row>
-			<Navbar fixed='bottom' className='w-100 justify-content-center' style={{background: 'red'}}>
-				<Navbar.Text>Hi there</Navbar.Text>
+			<Navbar bg='dark' fixed='bottom' className='w-100 justify-content-center'>
+				<Button disabled={selectedPlaylist === null}>Convert</Button>
 			</Navbar>
 		</Container>
 	)

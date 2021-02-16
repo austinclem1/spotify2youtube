@@ -6,6 +6,7 @@ import Col from 'react-bootstrap/Col'
 import Image from 'react-bootstrap/Image'
 import Jumbotron from 'react-bootstrap/Jumbotron'
 import ListGroup from 'react-bootstrap/ListGroup'
+import Navbar from 'react-bootstrap/Navbar'
 import Row from 'react-bootstrap/Row'
 import styles from '../styles/spotify-playlists.module.css'
 import React, { useState } from 'react'
@@ -127,6 +128,9 @@ function SpotifyPlaylists({ userPlaylists }) {
 			<Row className='m-xs-1 m-sm-2 m-md-3 m-lg-4 m-xl-5'>
 				{playlistListItems}
 			</Row>
+			<Navbar fixed='bottom' className='w-100 justify-content-center' style={{background: 'red'}}>
+				<Navbar.Text>Hi there</Navbar.Text>
+			</Navbar>
 		</Container>
 	)
 }

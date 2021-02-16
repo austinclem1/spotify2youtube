@@ -1,3 +1,15 @@
 /* .PlaylistCard { */
 /* 	width: 18rem; */
 /* } */
+
+body {
+	margin-bottom: 60px;
+}
+
+.Footer {
+	height: 60px;
+	color: red;
+	background: green;
+	bottom: 0;
+	position: fixed;
+}

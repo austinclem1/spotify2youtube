@@ -1,17 +1,15 @@
-import styles from '../styles/index.module.css'
-
 import Head from 'next/head'
 
+import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Jumbotron from 'react-bootstrap/Jumbotron'
 
 function Headline() {
 	return(
-		<Container className={styles.centered}>
+		<Container className='text-center'>
 			<Jumbotron>
-				<h1>Spotify2Youtube Playlist Converter</h1>
-				<p>Easily convert a spotify playlist to a youtube playlist</p>
+				<h1>Spotify2YouTube Playlist Converter</h1>
 			</Jumbotron>
 		</Container>
 	)
@@ -21,7 +19,7 @@ function IndexPage() {
   return (
 		<div>
 			<Head>
-				<title>Spotify2Youtube</title>
+				<title>Spotify2YouTube</title>
 				<meta name="viewport" content="initial-scale=1.0, width=device-width" />
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
@@ -36,7 +34,7 @@ function IndexPage() {
 						<img src="/Spotify_Logo_RGB_Green.png" width="300" />
 					</Row>
 					<Row className="justify-content-md-center">
-						<button onClick={userClickedLogin}>Login</button>
+						<Button onClick={userClickedLogin}>Login</Button>
 					</Row>
 			</Container>
 		</div>

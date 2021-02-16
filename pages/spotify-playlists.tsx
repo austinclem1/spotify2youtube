@@ -8,8 +8,7 @@ import Jumbotron from 'react-bootstrap/Jumbotron'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Navbar from 'react-bootstrap/Navbar'
 import Row from 'react-bootstrap/Row'
-import styles from '../styles/spotify-playlists.module.css'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Cookies from 'cookies'
 
 export async function getServerSideProps(context) {
@@ -104,7 +103,13 @@ function TrackList(props) {
 }
 
 function PlaylistCard(props) {
+	const cardRef = useRef(null)
 	const { playlist, order, isSelected, setSelectedPlaylist } = props
+	useEffect(() => {
+		if (isSelected) {
+			cardRef.current.scrollIntoView()
+		}
+	})
 	let currentOrder = order
 	if (isSelected && order % 2 === 0) {
 		currentOrder -= 2
@@ -113,7 +118,7 @@ function PlaylistCard(props) {
 	const cardWidth = isSelected ? 12 : 6
 	return(
 		<Col xs={{span: 12, order: order}} lg={{span: cardWidth, order: currentOrder}} className='my-3 mx-0'>
-			<Card bg={color} className='h-100' onClick={() => setSelectedPlaylist(playlist.id)} key={playlist.id}>
+			<Card ref={cardRef} bg={color} className='h-100' onClick={() => setSelectedPlaylist(playlist.id)} key={playlist.id}>
 				<Card.Header className='text-center' as='h4'>
 					<strong>{playlist.name}</strong>
 				</Card.Header>

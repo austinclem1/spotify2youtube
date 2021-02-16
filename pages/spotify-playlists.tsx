@@ -10,13 +10,48 @@ import Navbar from 'react-bootstrap/Navbar'
 import Row from 'react-bootstrap/Row'
 import styles from '../styles/spotify-playlists.module.css'
 import React, { useState } from 'react'
+import Cookies from 'cookies'
 
 export async function getServerSideProps(context) {
+	const cookieExpirationDate = new Date()
+	cookieExpirationDate.setFullYear(cookieExpirationDate.getFullYear() + 1)
+	const cookieOptions = {
+		expires: cookieExpirationDate,
+		overwrite: true
+	}
+	const cookies = new Cookies(context.req, context.res)
 	// Check if we've been granted an authorization code
 	// Without it, we can't get an access token for the user's
 	// Spotify playlists etc.
+	// TODO: Eventually this may be unnessecary to check, if the user has
+	// a refresh token in a cookie we can use that instead of the authorization
+	// code. Refresh tokens are effectively permanent according to brief googling
 	const authorizationCode = context.query.code
-	if (!authorizationCode) {
+	let accessToken
+	let refreshToken
+	// If we have no authorization code, see if we have a cookie with a
+	// refresh token
+	if (authorizationCode) {
+		[accessToken, refreshToken] = await getSpotifyUserAccessToken(authorizationCode, 'authorization_code')
+		cookies.set('accessToken', accessToken, cookieOptions)
+		if (refreshToken) {
+			cookies.set('refreshToken', refreshToken, cookieOptions)
+		}
+		console.log('--------')
+		console.log('used authorization code to get tokens')
+		console.log('stored tokens in cookie')
+		console.log('--------')
+	} else {
+		accessToken = cookies.get('accessToken')
+		refreshToken = cookies.get('refreshToken')
+		console.log('--------')
+		console.log('get tokens from cookie')
+		console.log('--------')
+	}
+
+	// If we have no access token at this point, we should give up and redirect
+	// to login page
+	if (!accessToken) {
 		return {
 			redirect: {
 				permanent: false,
@@ -25,9 +60,7 @@ export async function getServerSideProps(context) {
 		}
 	}
 
-	const accessToken = await getSpotifyUserAccessToken(authorizationCode)
-
-	const userPlaylists = await getSpotifyUserPlaylists(accessToken)
+	const userPlaylists = await getSpotifyUserPlaylists(accessToken, refreshToken, cookies)
 
 	return {
 		props: {
@@ -135,7 +168,7 @@ function SpotifyPlaylists({ userPlaylists }) {
 	)
 }
 
-async function getSpotifyUserAccessToken(authorizationCode: string) {
+async function getSpotifyUserAccessToken(authorizationCode: string, grantType: string) {
 	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
 
 	// TODO: We can probably do this base64 encoding ahead of time
@@ -144,12 +177,20 @@ async function getSpotifyUserAccessToken(authorizationCode: string) {
 		process.env.SPOTIFY_CLIENT_SECRET,
 		'utf-8'
 	)
-	const formBody = encodeURIComponent('grant_type') + '=' +
-		encodeURIComponent('authorization_code') + '&' +
-		encodeURIComponent('code') + '=' +
-		encodeURIComponent(authorizationCode) + '&' +
-		encodeURIComponent('redirect_uri') + '=' +
-		encodeURIComponent('http://localhost:3000/spotify-playlists')
+	let formBody
+	if (grantType === 'authorization_code') {
+		formBody = encodeURIComponent('grant_type') + '=' +
+			encodeURIComponent(grantType) + '&' +
+			encodeURIComponent('code') + '=' +
+			encodeURIComponent(authorizationCode) + '&' +
+			encodeURIComponent('redirect_uri') + '=' +
+			encodeURIComponent('http://localhost:3000/spotify-playlists')
+	} else {
+		formBody = encodeURIComponent('grant_type') + '=' +
+			encodeURIComponent(grantType) + '&' +
+			encodeURIComponent('refresh_token') + '=' +
+			encodeURIComponent(authorizationCode)
+	}
 
 	const tokenFetchOptions = {
 		method: 'POST',
@@ -161,21 +202,61 @@ async function getSpotifyUserAccessToken(authorizationCode: string) {
 	}
 	const response = await fetch(spotifyTokenURL, tokenFetchOptions)
 	const result = await response.json()
-	return result.access_token
+
+	console.log('--------')
+	console.log('getting tokens')
+	console.log('access token:', result.access_token)
+	console.log('refresh token:', result.refresh_token)
+	console.log('--------')
+
+	return [result.access_token, result.refresh_token]
 }
 
-async function getSpotifyUserPlaylists(accessToken) {
+async function getSpotifyUserPlaylists(accessToken, refreshToken, cookies) {
 	// Request 10 playlists owned or followed by the current user
+	const cookieExpirationDate = new Date()
+	cookieExpirationDate.setFullYear(cookieExpirationDate.getFullYear() + 1)
+	const cookieOptions = {
+		expires: cookieExpirationDate,
+		overwrite: true
+	}
 	const spotifyPlaylistsURL = 'https://api.spotify.com/v1/me/playlists?limit=10'
-	const spotifyFetchOptions = {
+	let spotifyFetchOptions = {
 		method: 'GET',
 		headers: {
 			'Accept': 'application/json',
 			'Content-Type': 'application/json',
-			'Authorization': 'Bearer ' + accessToken
+			// 'Authorization': 'Bearer ' + accessToken
+			'Authorization': 'Bearer ' + 'blahblahblah'
 		}
 	}
-	const playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
+	let playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
+	console.log('--------')
+	console.log('retreiving playlists')
+	console.log('--------')
+	if (playlistResponse.status === 401) {
+		[accessToken, refreshToken] = await getSpotifyUserAccessToken(refreshToken, 'refresh_token')
+		cookies.set('accessToken', accessToken, cookieOptions)
+		// Only store refresh token if we actually got one
+		if (refreshToken) {
+			cookies.set('refreshToken', refreshToken, cookieOptions)
+		}
+		console.log('--------')
+		console.log('got 401 code. Getting new tokens with refresh token')
+		console.log('--------')
+		spotifyFetchOptions = {
+			method: 'GET',
+			headers: {
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + accessToken
+			}
+		}
+		playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
+		console.log('--------')
+		console.log('retreiving playlists with new access token')
+		console.log('--------')
+	}
 	const userPlaylistsJson = await playlistResponse.json()
 	let userPlaylists = []
 	userPlaylistsJson.items.forEach((playlist) => {

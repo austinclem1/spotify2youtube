@@ -4,6 +4,7 @@ import Container from 'react-bootstrap/Container'
 import Col from 'react-bootstrap/Col'
 import Image from 'react-bootstrap/Image'
 import Jumbotron from 'react-bootstrap/Jumbotron'
+import Link from 'next/link'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Navbar from 'react-bootstrap/Navbar'
 import Row from 'react-bootstrap/Row'
@@ -175,7 +176,9 @@ function SpotifyPlaylists({ userPlaylists }) {
 				{playlistListItems}
 			</Row>
 			<Navbar bg='dark' fixed='bottom' className='w-100 justify-content-center'>
-				<Button disabled={selectedPlaylist === null}>Convert</Button>
+				<Link href='/youtube-results'>
+					<Button disabled={selectedPlaylist === null}>Convert</Button>
+				</Link>
 			</Navbar>
 		</Container>
 	)

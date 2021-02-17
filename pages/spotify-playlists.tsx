@@ -195,8 +195,7 @@ async function getSpotifyUserPlaylists(accessToken, refreshToken, cookies) {
 		headers: {
 			'Accept': 'application/json',
 			'Content-Type': 'application/json',
-			// 'Authorization': 'Bearer ' + accessToken
-			'Authorization': 'Bearer ' + 'blahblahblah'
+			'Authorization': 'Bearer ' + accessToken
 		}
 	}
 	let playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)

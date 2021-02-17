@@ -10,6 +10,8 @@ import Row from 'react-bootstrap/Row'
 import React, { useEffect, useRef, useState } from 'react'
 import Cookies from 'cookies'
 
+import { getSpotifyUserAccessToken } from '../helpers/spotify-helpers'
+
 export async function getServerSideProps(context) {
 	const cookieExpirationDate = new Date()
 	cookieExpirationDate.setFullYear(cookieExpirationDate.getFullYear() + 1)
@@ -30,7 +32,10 @@ export async function getServerSideProps(context) {
 	// If we have no authorization code, see if we have a cookie with a
 	// refresh token
 	if (authorizationCode) {
-		[accessToken, refreshToken] = await getSpotifyUserAccessToken(authorizationCode, 'authorization_code')
+		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
+			authentication: authorizationCode,
+			useAuthorizationCode: true,
+		})
 		cookies.set('accessToken', accessToken, cookieOptions)
 		if (refreshToken) {
 			cookies.set('refreshToken', refreshToken, cookieOptions)
@@ -176,50 +181,6 @@ function SpotifyPlaylists({ userPlaylists }) {
 	)
 }
 
-async function getSpotifyUserAccessToken(authorizationCode: string, grantType: string) {
-	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
-
-	// TODO: We can probably do this base64 encoding ahead of time
-	const combinedCodeBuffer = Buffer.from(
-		process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID + ':' +
-		process.env.SPOTIFY_CLIENT_SECRET,
-		'utf-8'
-	)
-	let formBody
-	if (grantType === 'authorization_code') {
-		formBody = encodeURIComponent('grant_type') + '=' +
-			encodeURIComponent(grantType) + '&' +
-			encodeURIComponent('code') + '=' +
-			encodeURIComponent(authorizationCode) + '&' +
-			encodeURIComponent('redirect_uri') + '=' +
-			encodeURIComponent('http://localhost:3000/spotify-playlists')
-	} else {
-		formBody = encodeURIComponent('grant_type') + '=' +
-			encodeURIComponent(grantType) + '&' +
-			encodeURIComponent('refresh_token') + '=' +
-			encodeURIComponent(authorizationCode)
-	}
-
-	const tokenFetchOptions = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-			'Authorization': 'Basic ' + combinedCodeBuffer.toString('base64')
-		},
-		body: formBody
-	}
-	const response = await fetch(spotifyTokenURL, tokenFetchOptions)
-	const result = await response.json()
-
-	console.log('--------')
-	console.log('getting tokens')
-	console.log('access token:', result.access_token)
-	console.log('refresh token:', result.refresh_token)
-	console.log('--------')
-
-	return [result.access_token, result.refresh_token]
-}
-
 async function getSpotifyUserPlaylists(accessToken, refreshToken, cookies) {
 	// Request 10 playlists owned or followed by the current user
 	const cookieExpirationDate = new Date()
@@ -243,7 +204,10 @@ async function getSpotifyUserPlaylists(accessToken, refreshToken, cookies) {
 	console.log('retreiving playlists')
 	console.log('--------')
 	if (playlistResponse.status === 401) {
-		[accessToken, refreshToken] = await getSpotifyUserAccessToken(refreshToken, 'refresh_token')
+		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
+			authentication: refreshToken,
+			useAuthorizationCode: false,
+		})
 		cookies.set('accessToken', accessToken, cookieOptions)
 		// Only store refresh token if we actually got one
 		if (refreshToken) {

@@ -5,6 +5,29 @@ import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
 import Jumbotron from 'react-bootstrap/Jumbotron'
 
+import Cookies from 'cookies'
+import { getSpotifyUserAccessToken } from '../helpers/spotify-helpers'
+
+
+export async function getServerSideProps(context) {
+	let { accessToken, refreshToken } = context.req.cookies
+	let userData
+	if (refreshToken) {
+		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
+			authentication: refreshToken,
+			useAuthorizationCode: false,
+			context
+		})
+		if (accessToken) {
+			console.log('got an access token using existing refresh token')
+			// userData = await getSpotifyUserData(context)
+		}
+	}
+
+	return {
+		props: {}
+	}
+}
 
 function LoginPrompt() {
 	return(
@@ -44,10 +67,16 @@ function userClickedLogin() {
 	// On successful login we are redirected to spotify-playlists page
 	const spotifyAuthenticationUrl = 'https://accounts.spotify.com/authorize' +
 		'?response_type=code' +
-		'&client_id=' + process.env.NEXT_PUBLIC_SPOTIFY_CLIENT_ID +
+		'&client_id=' + process.env.spotifyClientId +
 		'&scope=' + 'playlist-read-private' +
 		'&redirect_uri=' + 'http://localhost:3000/spotify-playlists';
 	window.location.assign(spotifyAuthenticationUrl)
 }
 
 export default IndexPage
+
+async function getSpotifyUserData(context) {
+	const cookies = new Cookies(context.req, context.res)
+	let accessToken = context.req.cookies.accessToken
+	let refreshToken = context.req.cookies.refreshToken
+}

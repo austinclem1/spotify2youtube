@@ -12,6 +12,7 @@ module.exports = {
 		spotifyClientId,
 		spotifyClientSecret,
 		spotifyTokenAuthorization,
+		spotifyReducedTrackCount: 5,
 		youtubeClientId: '543052497909-vovj9kgvse95tg5ufseoc1go31cidfnl.apps.googleusercontent.com',
 		youtubeClientSecret: 'OU89BpNFpZynNK4PPE8mkwZD',
 		youtubeApiKey: 'AIzaSyDWVbXaKoTIURF8x4MMOK94ZhO5gsm1mG0',

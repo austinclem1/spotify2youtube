@@ -1,7 +1,7 @@
 import Cookies from 'cookies'
 
-export async function getSpotifyUserAccessToken({ authentication, useAuthorizationCode, context }) {
-	const cookies = new Cookies(context.req, context.res)
+export async function getSpotifyUserAccessToken({ authentication, useAuthorizationCode, req, res }) {
+	const cookies = new Cookies(req, res)
 	const cookieExpirationDate = new Date()
 	cookieExpirationDate.setFullYear(cookieExpirationDate.getFullYear() + 1)
 	const cookieOptions = {

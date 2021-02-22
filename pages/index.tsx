@@ -16,7 +16,8 @@ export async function getServerSideProps(context) {
 		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
 			authentication: refreshToken,
 			useAuthorizationCode: false,
-			context
+			req: context.req,
+			res: context.res
 		})
 		if (accessToken) {
 			console.log('got an access token using existing refresh token')

@@ -29,7 +29,8 @@ export async function getServerSideProps(context) {
 		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
 			authentication: refreshToken,
 			useAuthorizationCode: false,
-			context,
+			req: context.req,
+			res: context.res
 		})
 	} else {
 		const authorizationCode = context.query.code;
@@ -37,7 +38,8 @@ export async function getServerSideProps(context) {
 			[accessToken, refreshToken] = await getSpotifyUserAccessToken({
 				authentication: authorizationCode,
 				useAuthorizationCode: true,
-				context,
+				req: context.req,
+				res: context.res
 			})
 		}
 	}

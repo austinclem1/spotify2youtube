@@ -50,3 +50,10 @@ export async function getSpotifyUserAccessToken({ authentication, useAuthorizati
 	return [result.access_token, result.refresh_token]
 }
 
+function generateRandomStateString() {
+	const length = 8
+	let typedNums = new Uint8Array(length)
+	typedNums = window.crypto.getRandomValues(typedNums)
+	const nums = Array.from(typedNums)
+	return nums.map((num) => num.toString(16)).join('')
+}

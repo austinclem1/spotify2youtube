@@ -1,5 +1,27 @@
 import Cookies from 'cookies'
 
+export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) {
+	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
+
+	const query = new URLSearchParams({
+		client_id: process.env.spotifyClientId,
+		grant_type: 'authorization_code',
+		code: code,
+		redirect_uri: redirectURI,
+		code_verifier: codeVerifier
+	})
+
+	const fetchOptions = {
+		method: 'POST',
+		body: query.toString()
+	}
+
+	const response = await fetch(spotifyTokenURL, fetchOptions)
+		.then((res) => res.json())
+	console.log(JSON.stringify(response))
+
+	return [response.access_token, response.refresh_token]
+}
 export async function getSpotifyUserAccessToken({ authentication, useAuthorizationCode, req, res }) {
 	const cookies = new Cookies(req, res)
 	const cookieExpirationDate = new Date()
@@ -50,7 +72,7 @@ export async function getSpotifyUserAccessToken({ authentication, useAuthorizati
 	return [result.access_token, result.refresh_token]
 }
 
-function generateRandomStateString() {
+export function generateRandomStateString() {
 	const length = 8
 	let typedNums = new Uint8Array(length)
 	typedNums = window.crypto.getRandomValues(typedNums)

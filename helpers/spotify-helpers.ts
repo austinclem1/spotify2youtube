@@ -40,6 +40,7 @@ export async function getSpotifyAccessToken() {
 	return accessToken
 }
 
+// TODO: can we use then instead of async await here
 export async function refreshSpotifyTokens(refreshToken) {
 	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
 
@@ -65,6 +66,19 @@ export async function refreshSpotifyTokens(refreshToken) {
 				}
 			}
 		})
+
+	// let response
+	// fetch(spotifyTokenURL, fetchOptions)
+	// 	.then((res) => {
+	// 		if (res.ok) {
+	// 			return res.json()
+	// 		} else {
+	// 			return {
+	// 				error: res.status
+	// 			}
+	// 		}
+	// 	})
+	// 	.then((res) => response = res)
 
 	let accessToken = response.access_token
 	let expiresIn = response.expires_in

@@ -16,31 +16,18 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 
 
-function LoginPrompt() {
-	return(
-		<Container>
-			<Row className="justify-content-md-center">
-				<h3>Log In to Spotify to Get Started</h3>
-			</Row>
-			<Row className="justify-content-md-center">
-				<img src="/Spotify_Logo_RGB_Green.png" width="300" />
-			</Row>
-			<Row className="justify-content-md-center">
-				<Button onClick={userClickedLogin}>Login</Button>
-			</Row>
-		</Container>
-	)
-}
-
 function IndexPage() {
 	const router = useRouter()
-	const accessToken = getSpotifyAccessToken()
 	useEffect(() => {
-		if (accessToken === null) {
-			router.replace('/spotify-login')
-		} else {
-			router.replace('/spotify-landing')
-		}
+		getSpotifyAccessToken()
+			.then((accessToken) => {
+				console.log(accessToken)
+				if (accessToken === null) {
+					router.replace('/spotify-login')
+				} else {
+					router.replace('/spotify-landing')
+				}
+			})
 	})
 
   return (
@@ -57,18 +44,6 @@ function IndexPage() {
 			<Spinner animation='border' />
 		</Container>
   )
-}
-
-function userClickedLogin() {
-	// Request access token from Spotify for access to
-	// user's private and followed playlists
-	// On successful login we are redirected to spotify-playlists page
-	const spotifyAuthenticationUrl = 'https://accounts.spotify.com/authorize' +
-		'?response_type=code' +
-		'&client_id=' + process.env.spotifyClientId +
-		'&scope=' + 'playlist-read-private' +
-		'&redirect_uri=' + 'http://localhost:3000/spotify-playlists';
-	window.location.assign(spotifyAuthenticationUrl)
 }
 
 export default IndexPage

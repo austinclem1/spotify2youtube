@@ -22,6 +22,77 @@ export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) 
 
 	return [response.access_token, response.refresh_token]
 }
+
+export async function getSpotifyAccessToken() {
+	let accessToken = window.localStorage.getItem('spotifyAccessToken')
+	let accessTokenExpiration = parseInt(window.localStorage.getItem('spotifyAccessTokenExpiration'))
+	let refreshToken = window.localStorage.getItem('spotifyRefreshToken')
+	if (!(accessToken && accessTokenExpiration && refreshToken)) {
+		return null
+	}
+	// If we're within 3 minutes of an expired token, go ahead and treat it as
+	// expired so we can get a new one
+	const tokenExpirationBufferMS = 180_000
+	if (accessTokenExpiration - Date.now() < tokenExpirationBufferMS) {
+		[accessToken, refreshToken] = await refreshSpotifyTokens(refreshToken)
+	}
+
+	return accessToken
+}
+
+export async function refreshSpotifyTokens(refreshToken) {
+	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
+
+	const query = new URLSearchParams({
+		grant_type: 'authorization_code',
+		refresh_token: refreshToken,
+		client_id: process.env.spotifyClientId,
+	})
+
+	const fetchOptions = {
+		method: 'POST',
+		body: query.toString()
+	}
+
+	// TODO: Find better way to handle error here
+	const response = await fetch(spotifyTokenURL, fetchOptions)
+		.then((res) => {
+			if (res.ok) {
+				return res.json()
+			} else {
+				return {
+					error: res.status
+				}
+			}
+		})
+
+	let accessToken = response.access_token
+	let expiresIn = response.expires_in
+	refreshToken = response.refresh_token
+	// If we succeeded in getting new tokens, store them in local storage
+	if (accessToken) {
+		window.localStorage.setItem('spotifyAccessToken', accessToken)
+	} else {
+		window.localStorage.removeItem('spotifyAccessToken')
+	}
+	if (expiresIn) {
+		// `expiresIn` represents seconds. Convert to milliseconds for expiration
+		// time
+		let accessTokenExpiration = Date.now() + (expiresIn * 1000)
+		window.localStorage.setItem('spotifyAccessTokenExpiration', accessTokenExpiration.toString())
+	} else {
+		window.localStorage.removeItem('spotifyAccessTokenExpiration')
+	}
+	if (refreshToken) {
+		window.localStorage.setItem('spotifyRefreshToken', refreshToken)
+	} else {
+		window.localStorage.removeItem('spotifyRefreshToken')
+	}
+
+	return [accessToken, refreshToken]
+}
+
+// Defunct for now
 export async function getSpotifyUserAccessToken({ authentication, useAuthorizationCode, req, res }) {
 	const cookies = new Cookies(req, res)
 	const cookieExpirationDate = new Date()

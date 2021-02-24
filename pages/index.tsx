@@ -3,32 +3,18 @@ import Head from 'next/head'
 import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import Row from 'react-bootstrap/Row'
+import Spinner from 'react-bootstrap/Spinner'
 import Jumbotron from 'react-bootstrap/Jumbotron'
 
 import Cookies from 'cookies'
-import { getSpotifyUserAccessToken } from '../helpers/spotify-helpers'
+import { 
+	getSpotifyAccessToken,
+	refreshSpotifyTokens,
+	getSpotifyTokensFromCode
+} from '../helpers/spotify-helpers'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
 
-
-export async function getServerSideProps(context) {
-	let { accessToken, refreshToken } = context.req.cookies
-	let userData
-	if (refreshToken) {
-		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
-			authentication: refreshToken,
-			useAuthorizationCode: false,
-			req: context.req,
-			res: context.res
-		})
-		if (accessToken) {
-			console.log('got an access token using existing refresh token')
-			// userData = await getSpotifyUserData(context)
-		}
-	}
-
-	return {
-		props: {}
-	}
-}
 
 function LoginPrompt() {
 	return(
@@ -47,6 +33,16 @@ function LoginPrompt() {
 }
 
 function IndexPage() {
+	const router = useRouter()
+	const accessToken = getSpotifyAccessToken()
+	useEffect(() => {
+		if (accessToken === null) {
+			router.replace('/spotify-login')
+		} else {
+			router.replace('/spotify-landing')
+		}
+	})
+
   return (
 		<Container className='text-center'>
 			<Head>
@@ -57,7 +53,8 @@ function IndexPage() {
 			<Jumbotron>
 				<h1>Spotify2YouTube Playlist Converter</h1>
 			</Jumbotron>
-			<LoginPrompt />
+			<h5>Checking Login Status</h5>
+			<Spinner animation='border' />
 		</Container>
   )
 }
@@ -76,8 +73,3 @@ function userClickedLogin() {
 
 export default IndexPage
 
-async function getSpotifyUserData(context) {
-	const cookies = new Cookies(context.req, context.res)
-	let accessToken = context.req.cookies.accessToken
-	let refreshToken = context.req.cookies.refreshToken
-}

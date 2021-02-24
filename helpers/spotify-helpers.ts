@@ -71,6 +71,7 @@ export async function refreshSpotifyTokens(refreshToken) {
 	refreshToken = response.refresh_token
 	// If we succeeded in getting new tokens, store them in local storage
 	if (accessToken) {
+		accessToken = null
 		window.localStorage.setItem('spotifyAccessToken', accessToken)
 	} else {
 		window.localStorage.removeItem('spotifyAccessToken')
@@ -84,6 +85,7 @@ export async function refreshSpotifyTokens(refreshToken) {
 		window.localStorage.removeItem('spotifyAccessTokenExpiration')
 	}
 	if (refreshToken) {
+		refreshToken = null
 		window.localStorage.setItem('spotifyRefreshToken', refreshToken)
 	} else {
 		window.localStorage.removeItem('spotifyRefreshToken')

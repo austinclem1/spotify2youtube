@@ -1,20 +1,20 @@
-import Button from 'react-bootstrap/Button'
-import Card from 'react-bootstrap/Card'
-import Container from 'react-bootstrap/Container'
-import Col from 'react-bootstrap/Col'
-import Image from 'react-bootstrap/Image'
-import Jumbotron from 'react-bootstrap/Jumbotron'
-import Link from 'next/link'
-import ListGroup from 'react-bootstrap/ListGroup'
-import Navbar from 'react-bootstrap/Navbar'
-import Row from 'react-bootstrap/Row'
-import Spinner from 'react-bootstrap/Spinner'
-import React, { useEffect, useRef, useState } from 'react'
-import useSWR from 'swr'
+import Button from "react-bootstrap/Button"
+import Card from "react-bootstrap/Card"
+import Container from "react-bootstrap/Container"
+import Col from "react-bootstrap/Col"
+import Image from "react-bootstrap/Image"
+import Jumbotron from "react-bootstrap/Jumbotron"
+import Link from "next/link"
+import ListGroup from "react-bootstrap/ListGroup"
+import Navbar from "react-bootstrap/Navbar"
+import Row from "react-bootstrap/Row"
+import Spinner from "react-bootstrap/Spinner"
+import React, { useEffect, useRef, useState } from "react"
+import useSWR from "swr"
 
-import fetcher from '../libs/fetcher'
+import fetcher from "../libs/fetcher"
 
-import { getSpotifyUserAccessToken } from '../helpers/spotify-helpers'
+import { getSpotifyUserAccessToken } from "../helpers/spotify-helpers"
 
 export async function getServerSideProps(context) {
 	// TODO: this should probably be on a login landing page,
@@ -48,7 +48,7 @@ export async function getServerSideProps(context) {
 		return {
 			redirect: {
 				permanent: false,
-				destination: '/'
+				destination: "/"
 			}
 		}
 	}
@@ -62,19 +62,19 @@ export async function getServerSideProps(context) {
 function TrackList(props) {
 	const { tracks, isSelected } = props
 	let numTracksShown = isSelected ? tracks.length : process.env.spotifyReducedTrackCount
-	const color = isSelected ? 'primary' : 'light'
+	const color = isSelected ? "primary" : "light"
 
 	if (isSelected) {
 		return(
 			<ListGroup>
 				<ListGroup horizontal>
-					<ListGroup.Item variant={'dark'} className='p-1 w-50'><strong>Title</strong></ListGroup.Item>
-					<ListGroup.Item variant={'dark'} className='p-1 w-50'><strong>Artist</strong></ListGroup.Item>
+					<ListGroup.Item variant={"dark"} className="p-1 w-50"><strong>Title</strong></ListGroup.Item>
+					<ListGroup.Item variant={"dark"} className="p-1 w-50"><strong>Artist</strong></ListGroup.Item>
 				</ListGroup>
 				{tracks.map((track) => 
 					<ListGroup horizontal>
-						<ListGroup.Item variant={color} className='p-1 w-50'>{track.name}</ListGroup.Item>
-						<ListGroup.Item variant={color} className='p-1 w-50'>{track.artists}</ListGroup.Item>
+						<ListGroup.Item variant={color} className="p-1 w-50">{track.name}</ListGroup.Item>
+						<ListGroup.Item variant={color} className="p-1 w-50">{track.artists}</ListGroup.Item>
 					</ListGroup>
 				)}
 			</ListGroup>
@@ -83,10 +83,10 @@ function TrackList(props) {
 		return(
 			<ListGroup>
 				{tracks.slice(0, numTracksShown).map((track) => 
-					<ListGroup.Item variant={color} className='p-1'>{track.name}</ListGroup.Item>
+					<ListGroup.Item variant={color} className="p-1">{track.name}</ListGroup.Item>
 				)}
 				{tracks.length > numTracksShown + 1 &&
-					<ListGroup.Item variant={color} className='p-1'>{tracks.length - numTracksShown} More...</ListGroup.Item>
+					<ListGroup.Item variant={color} className="p-1">{tracks.length - numTracksShown} More...</ListGroup.Item>
 				}
 			</ListGroup>
 		)
@@ -104,7 +104,7 @@ function PlaylistCard(props) {
 			window.scrollTo({
 				top: position.top + window.scrollY - 20,
 				left: 0,
-				behavior: 'smooth'
+				behavior: "smooth"
 			})
 		}
 	})
@@ -112,19 +112,19 @@ function PlaylistCard(props) {
 	if (isSelected && order % 2 === 0) {
 		currentOrder -= 2
 	}
-	const color = isSelected ? 'primary' : 'light'
+	const color = isSelected ? "primary" : "light"
 	const cardWidth = isSelected ? 12 : 6
 	return(
-		<Col xs={{span: 12, order: order}} lg={{span: cardWidth, order: currentOrder}} className='my-3 mx-0'>
-			<Card ref={cardRef} bg={color} className='h-100' onClick={() => setSelectedPlaylist(playlist.id)} key={playlist.id}>
-				<Card.Header className='text-center' as='h4'>
+		<Col xs={{span: 12, order: order}} lg={{span: cardWidth, order: currentOrder}} className="my-3 mx-0">
+			<Card ref={cardRef} bg={color} className="h-100" onClick={() => setSelectedPlaylist(playlist.id)} key={playlist.id}>
+				<Card.Header className="text-center" as="h4">
 					<strong>{playlist.name}</strong>
 				</Card.Header>
 				<Card.Body>
 					<p>Current order: {currentOrder}</p>
-					<Row className='align-middle'>
+					<Row className="align-middle">
 						<Col xs={4}><Image src={playlist.image} fluid /></Col>
-						<Col xs={8} className='align-self-center'>
+						<Col xs={8} className="align-self-center">
 							<Card.Text>
 								<TrackList 
 									tracks={playlist.tracks}
@@ -133,7 +133,7 @@ function PlaylistCard(props) {
 							</Card.Text>
 						</Col>
 					</Row>
-					<a className='stretched-link' role='button' />
+					<a className="stretched-link" role="button" />
 				</Card.Body>
 		</Card>
 	</Col>
@@ -150,21 +150,21 @@ function SpotifyPlaylists() {
 			_setSelectedPlaylist(id)
 		}
 	}
-	const { data: playlists, error } = useSWR('api/spotify-user-playlists', fetcher)
+	const { data: playlists, error } = useSWR("api/spotify-user-playlists", fetcher)
 	return(
-		<Container className='text-center'>
+		<Container className="text-center">
 			<Jumbotron>
 				<h1>Choose a Playlist to Convert</h1>
 			</Jumbotron>
-			<Row className='m-xs-1 m-sm-2 m-md-3 m-lg-4 m-xl-5'>
+			<Row className="m-xs-1 m-sm-2 m-md-3 m-lg-4 m-xl-5">
 				{
 					playlists ? playlists
 						.filter((playlist) => playlist.totalTracks > 0)
-					.map((playlist, index) => <PlaylistCard playlist={playlist} order={index + 1} isSelected={playlist.id === selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist}/>) : <Container>Loading Playlists...<Spinner animation='border' /></Container>
+					.map((playlist, index) => <PlaylistCard playlist={playlist} order={index + 1} isSelected={playlist.id === selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist}/>) : <Container>Loading Playlists...<Spinner animation="border" /></Container>
 				}
 			</Row>
-			<Navbar bg='dark' fixed='bottom' className='w-100 justify-content-center'>
-				<Link href='/youtube-results'>
+			<Navbar bg="dark" fixed="bottom" className="w-100 justify-content-center">
+				<Link href="/youtube-results">
 					<Button disabled={selectedPlaylist === null}>Convert</Button>
 				</Link>
 			</Navbar>
@@ -174,30 +174,30 @@ function SpotifyPlaylists() {
 
 // async function getSpotifyUserPlaylists(accessToken, refreshToken, context) {
 // 	// Request 10 playlists owned or followed by the current user
-// 	const spotifyPlaylistsURL = 'https://api.spotify.com/v1/me/playlists?limit=10'
+// 	const spotifyPlaylistsURL = "https://api.spotify.com/v1/me/playlists?limit=10"
 // 	let spotifyFetchOptions = {
-// 		method: 'GET',
+// 		method: "GET",
 // 		headers: {
-// 			'Accept': 'application/json',
-// 			'Content-Type': 'application/json',
-// 			'Authorization': 'Bearer ' + accessToken
+// 			"Accept": "application/json",
+// 			"Content-Type": "application/json",
+// 			"Authorization": "Bearer " + accessToken
 // 		}
 // 	}
 // 	let playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
-// 	console.log('fetching playlists...')
+// 	console.log("fetching playlists...")
 // 	if (playlistResponse.status === 401) {
-// 		console.log('Got 401, about to get new tokens')
+// 		console.log("Got 401, about to get new tokens")
 // 		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
 // 			authentication: refreshToken,
 // 			useAuthorizationCode: false,
 // 			context,
 // 		})
 // 		spotifyFetchOptions = {
-// 			method: 'GET',
+// 			method: "GET",
 // 			headers: {
-// 				'Accept': 'application/json',
-// 				'Content-Type': 'application/json',
-// 				'Authorization': 'Bearer ' + accessToken
+// 				"Accept": "application/json",
+// 				"Content-Type": "application/json",
+// 				"Authorization": "Bearer " + accessToken
 // 			}
 // 		}
 // 		playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
@@ -213,15 +213,15 @@ function SpotifyPlaylists() {
 // 	})
 // 	const playlistTrackPromises: Promise<Response>[] = userPlaylistsJson.items.map((playlist) => {
 // 		const tracksURL = playlist.tracks.href
-// 		const fields = 'items(track(name,artists(name)))'
+// 		const fields = "items(track(name,artists(name)))"
 // 		const tracksURLWithQuery = tracksURL +
-// 			'?fields=' + fields +
-// 			'&limit=20'
+// 			"?fields=" + fields +
+// 			"&limit=20"
 // 		return fetch(tracksURLWithQuery, spotifyFetchOptions)
 // 	})
 // 	const allTrackResponses = await Promise.allSettled(playlistTrackPromises)
 // 	const allTrackParsePromises = allTrackResponses.map((result) => {
-// 		if (result.status === 'fulfilled') {
+// 		if (result.status === "fulfilled") {
 // 			return result.value.json()
 // 		} else {
 // 			return null
@@ -229,18 +229,18 @@ function SpotifyPlaylists() {
 // 	})
 // 	const allParsedTracksResults = await Promise.allSettled(allTrackParsePromises)
 // 	// const allParsedTracks = allParsedTracksResults.map((result) => {
-// 	// 	if (result.status === 'fulfilled') {
+// 	// 	if (result.status === "fulfilled") {
 // 	// 		return result.value
 // 	// 	} else {
 // 	// 		return null
 // 	// 	}
 // 	// })
 // 	allParsedTracksResults.forEach((result, index) => {
-// 		if (result.status === 'fulfilled') {
-// 			userPlaylists[index]['tracks'] = result.value.items.map((item) => {
+// 		if (result.status === "fulfilled") {
+// 			userPlaylists[index]["tracks"] = result.value.items.map((item) => {
 // 				return {
 // 					name: item.track.name,
-// 					artists: item.track.artists.map((artist) => artist.name).join(', ')
+// 					artists: item.track.artists.map((artist) => artist.name).join(", ")
 // 				}
 // 			})
 // 		}

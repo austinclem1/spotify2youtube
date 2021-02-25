@@ -1,11 +1,11 @@
-import Cookies from 'cookies'
+import Cookies from "cookies"
 
 export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) {
-	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
+	const spotifyTokenURL = "https://accounts.spotify.com/api/token"
 
 	const query = new URLSearchParams({
 		client_id: process.env.spotifyClientId,
-		grant_type: 'authorization_code',
+		grant_type: "authorization_code",
 		code: code,
 		redirect_uri: redirectURI,
 		code_verifier: codeVerifier
@@ -70,7 +70,7 @@ export async function getSpotifyAccessToken() {
 	const tokenTimeLeftMS = accessTokenExpiration - Date.now()
 	console.log("time left:", tokenTimeLeftMS / 1000)
 	if (tokenTimeLeftMS < tokenExpirationBufferMS) {
-		console.log("token expired")
+		console.log("token expired");
 		[accessToken, refreshToken] = await refreshSpotifyTokens(refreshToken)
 	}
 
@@ -139,30 +139,30 @@ export async function getSpotifyUserAccessToken({ authentication, useAuthorizati
 		expires: cookieExpirationDate,
 		overwrite: true
 	}
-	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
+	const spotifyTokenURL = "https://accounts.spotify.com/api/token"
 
 	let formBody
 	if (useAuthorizationCode) {
-		formBody = encodeURIComponent('grant_type') + '=' +
-			encodeURIComponent('authorization_code') + '&' +
-			encodeURIComponent('code') + '=' +
-			encodeURIComponent(authentication) + '&' +
-			encodeURIComponent('redirect_uri') + '=' +
-			encodeURIComponent('http://localhost:3000/spotify-playlists')
-		console.log('using authorization code to get access/refresh tokens')
+		formBody = encodeURIComponent("grant_type") + "=" +
+			encodeURIComponent("authorization_code") + "&" +
+			encodeURIComponent("code") + "=" +
+			encodeURIComponent(authentication) + "&" +
+			encodeURIComponent("redirect_uri") + "=" +
+			encodeURIComponent("http://localhost:3000/spotify-playlists")
+		console.log("using authorization code to get access/refresh tokens")
 	} else {
-		formBody = encodeURIComponent('grant_type') + '=' +
-			encodeURIComponent('refresh_token') + '&' +
-			encodeURIComponent('refresh_token') + '=' +
+		formBody = encodeURIComponent("grant_type") + "=" +
+			encodeURIComponent("refresh_token") + "&" +
+			encodeURIComponent("refresh_token") + "=" +
 			encodeURIComponent(authentication)
-		console.log('using refresh token to get access/refresh tokens')
+		console.log("using refresh token to get access/refresh tokens")
 	}
 
 	const tokenFetchOptions = {
-		method: 'POST',
+		method: "POST",
 		headers: {
-			'Content-Type': 'application/x-www-form-urlencoded',
-			'Authorization': 'Basic ' + process.env.spotifyTokenAuthorization
+			"Content-Type": "application/x-www-form-urlencoded",
+			"Authorization": "Basic " + process.env.spotifyTokenAuthorization
 		},
 		body: formBody
 	}
@@ -170,12 +170,12 @@ export async function getSpotifyUserAccessToken({ authentication, useAuthorizati
 	const result = await response.json()
 
 	if (result.access_token) {
-		cookies.set('accessToken', result.access_token, cookieOptions)
-		console.log('got new access token and stored in cookie')
+		cookies.set("accessToken", result.access_token, cookieOptions)
+		console.log("got new access token and stored in cookie")
 	}
 	if (result.refresh_token) {
-		cookies.set('refreshToken', result.refresh_token, cookieOptions)
-		console.log('got new refresh token and stored in cookie')
+		cookies.set("refreshToken", result.refresh_token, cookieOptions)
+		console.log("got new refresh token and stored in cookie")
 	}
 
 	return [result.access_token, result.refresh_token]

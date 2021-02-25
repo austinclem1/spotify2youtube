@@ -1,19 +1,19 @@
-import Head from 'next/head'
+import Head from "next/head"
 
-import Button from 'react-bootstrap/Button'
-import Container from 'react-bootstrap/Container'
-import Row from 'react-bootstrap/Row'
-import Spinner from 'react-bootstrap/Spinner'
-import Jumbotron from 'react-bootstrap/Jumbotron'
+import Button from "react-bootstrap/Button"
+import Container from "react-bootstrap/Container"
+import Row from "react-bootstrap/Row"
+import Spinner from "react-bootstrap/Spinner"
+import Jumbotron from "react-bootstrap/Jumbotron"
 
-import Cookies from 'cookies'
+import Cookies from "cookies"
 import { 
 	getSpotifyAccessToken,
 	refreshSpotifyTokens,
 	getSpotifyTokensFromCode
-} from '../helpers/spotify-helpers'
-import { useEffect } from 'react'
-import { useRouter } from 'next/router'
+} from "../helpers/spotify-helpers"
+import { useEffect } from "react"
+import { useRouter } from "next/router"
 
 
 function IndexPage() {
@@ -23,15 +23,15 @@ function IndexPage() {
 			.then((accessToken) => {
 				console.log(accessToken)
 				if (accessToken === null) {
-					router.replace('/spotify-login')
+					router.replace("/spotify-login")
 				} else {
-					router.replace('/spotify-landing')
+					// router.replace("/spotify-landing")
 				}
 			})
 	})
 
   return (
-		<Container className='text-center'>
+		<Container className="text-center">
 			<Head>
 				<title>Spotify2YouTube</title>
 				<meta name="viewport" content="initial-scale=1.0, width=device-width" />
@@ -41,7 +41,7 @@ function IndexPage() {
 				<h1>Spotify2YouTube Playlist Converter</h1>
 			</Jumbotron>
 			<h5>Checking Login Status</h5>
-			<Spinner animation='border' />
+			<Spinner animation="border" />
 		</Container>
   )
 }

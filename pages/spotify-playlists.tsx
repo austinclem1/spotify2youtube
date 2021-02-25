@@ -14,50 +14,6 @@ import useSWR from "swr"
 
 import fetcher from "../libs/fetcher"
 
-import { getSpotifyUserAccessToken } from "../helpers/spotify-helpers"
-
-export async function getServerSideProps(context) {
-	// TODO: this should probably be on a login landing page,
-	// if there's an authorization code in the query, always use it
-	// to get tokens and store them in cookie
-	// Maybe this page can always just attempt to use a refresh token
-	// from cookie
-	let { accessToken, refreshToken } = context.req.cookies
-	if (refreshToken) {
-		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
-			authentication: refreshToken,
-			useAuthorizationCode: false,
-			req: context.req,
-			res: context.res
-		})
-	} else {
-		const authorizationCode = context.query.code;
-		if (authorizationCode) {
-			[accessToken, refreshToken] = await getSpotifyUserAccessToken({
-				authentication: authorizationCode,
-				useAuthorizationCode: true,
-				req: context.req,
-				res: context.res
-			})
-		}
-	}
-
-	// If we have no access token at this point, we should give up and redirect
-	// to login page
-	if (!accessToken) {
-		return {
-			redirect: {
-				permanent: false,
-				destination: "/"
-			}
-		}
-	}
-
-	return {
-		props: {
-		}
-	}
-}
 
 function TrackList(props) {
 	const { tracks, isSelected } = props
@@ -140,7 +96,6 @@ function PlaylistCard(props) {
 	)
 }
 
-// function SpotifyPlaylists({ userPlaylists }) {
 function SpotifyPlaylists() {
 	const [selectedPlaylist, _setSelectedPlaylist] = useState(null)
 	const setSelectedPlaylist = (id) => {

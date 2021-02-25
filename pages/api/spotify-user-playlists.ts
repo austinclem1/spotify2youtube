@@ -1,10 +1,8 @@
-import { getSpotifyUserAccessToken } from '../../helpers/spotify-helpers'
-import Cookies from 'cookies'
+import { getSpotifyAccessToken } from "../../helpers/spotify-helpers"
+
 
 export default async function handler(req, res) {
-	console.log(JSON.stringify(req.cookies))
-	let accessToken = req.cookies.accessToken
-	let refreshToken = req.cookies.refreshToken
+	let accessToken = getSpotifyAccessToken()
 	const spotifyPlaylistsURL = new URL('https://api.spotify.com/v1/me/playlists')
 	const limit = req.query.limit
 	if (limit) {
@@ -22,12 +20,11 @@ export default async function handler(req, res) {
 	let playlistResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
 		.then((res) => res.json())
 	if (playlistResponse.status === 401) {
-		[accessToken] = await getSpotifyUserAccessToken({
-			authentication: refreshToken,
-			useAuthorizationCode: false,
-			req,
-			res
-		})
+		// TODO what do we do if we get here?
+		// Might mean we have to kick use off and have them start
+		// validation process over
+		// Could maybe try a refresh attempt if it hasn't been done
+		// during access token retreival already
 	}
 	spotifyFetchOptions = {
 		method: 'GET',
@@ -39,8 +36,6 @@ export default async function handler(req, res) {
 	}
 	playlistResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
 		.then((res) => res.json())
-	const cookies = new Cookies(req, res)
-	cookies.set('thingy', 'asdfasdf')
 	let finalResults = []
 	playlistResponse.items.forEach((playlist) => {
 		finalResults.push({

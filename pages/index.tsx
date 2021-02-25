@@ -26,6 +26,7 @@ function IndexPage() {
 					router.replace("/spotify-login")
 				} else {
 					// router.replace("/spotify-landing")
+					router.replace("/spotify-playlists")
 				}
 			})
 	})

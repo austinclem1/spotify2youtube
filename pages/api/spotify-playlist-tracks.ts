@@ -1,9 +1,8 @@
-import { getSpotifyUserAccessToken } from '../../helpers/spotify-helpers'
+import { getSpotifyAccessToken } from "../../helpers/spotify-helpers"
+
 
 export default async function handler(req, res) {
-	console.log(JSON.stringify(req.cookies))
-	let accessToken = req.cookies.accessToken
-	let refreshToken = req.cookies.refreshToken
+	const accessToken = getSpotifyAccessToken()
 	const id = req.query.id
 	const market = 'from_token'
 	const fields = 'items(track(name,artists(name)))'
@@ -30,12 +29,7 @@ export default async function handler(req, res) {
 	let trackResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
 		.then((res) => res.json())
 	if (trackResponse.status === 401) {
-		[accessToken] = await getSpotifyUserAccessToken({
-			authentication: refreshToken,
-			useAuthorizationCode: false,
-			req,
-			res
-		})
+		// TODO decide how to deal with this
 	}
 	spotifyFetchOptions = {
 		method: 'GET',

@@ -11,29 +11,66 @@ export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) 
 		code_verifier: codeVerifier
 	})
 
+	const headers = new Headers({
+		"Content-Type": "application/x-www-form-urlencoded"
+	})
 	const fetchOptions = {
-		method: 'POST',
+		headers,
+		method: "POST",
 		body: query.toString()
 	}
 
 	const response = await fetch(spotifyTokenURL, fetchOptions)
 		.then((res) => res.json())
+
 	console.log(JSON.stringify(response))
 
-	return [response.access_token, response.refresh_token]
+	let accessToken = response.access_token
+	let expiresIn = response.expires_in
+	let refreshToken = response.refresh_token
+	// If we succeeded in getting new tokens, store them in local storage
+	if (accessToken) {
+		window.localStorage.setItem("spotifyAccessToken", accessToken)
+	} else {
+		accessToken = null
+		window.localStorage.removeItem("spotifyAccessToken")
+	}
+	if (expiresIn) {
+		// `expiresIn` represents seconds. Convert to milliseconds for expiration
+		// time
+		let accessTokenExpiration = Date.now() + (expiresIn * 1000)
+		window.localStorage.setItem("spotifyAccessTokenExpiration", accessTokenExpiration.toString())
+	} else {
+		window.localStorage.removeItem("spotifyAccessTokenExpiration")
+	}
+	if (refreshToken) {
+		window.localStorage.setItem("spotifyRefreshToken", refreshToken)
+	} else {
+		refreshToken = null
+		window.localStorage.removeItem("spotifyRefreshToken")
+	}
+
+	return [accessToken, refreshToken]
 }
 
 export async function getSpotifyAccessToken() {
-	let accessToken = window.localStorage.getItem('spotifyAccessToken')
-	let accessTokenExpiration = parseInt(window.localStorage.getItem('spotifyAccessTokenExpiration'))
-	let refreshToken = window.localStorage.getItem('spotifyRefreshToken')
+	console.log("retreiving access token")
+	let accessToken = window.localStorage.getItem("spotifyAccessToken")
+	let accessTokenExpiration = parseInt(window.localStorage.getItem("spotifyAccessTokenExpiration"))
+	let refreshToken = window.localStorage.getItem("spotifyRefreshToken")
 	if (!(accessToken && accessTokenExpiration && refreshToken)) {
+		console.log("something was missing from local storage")
+		console.log("aborting access token retreival")
 		return null
 	}
 	// If we're within 3 minutes of an expired token, go ahead and treat it as
 	// expired so we can get a new one
-	const tokenExpirationBufferMS = 180_000
-	if (accessTokenExpiration - Date.now() < tokenExpirationBufferMS) {
+	// const tokenExpirationBufferMS = 180_000
+	const tokenExpirationBufferMS = 3_550_000
+	const tokenTimeLeftMS = accessTokenExpiration - Date.now()
+	console.log("time left:", tokenTimeLeftMS / 1000)
+	if (tokenTimeLeftMS < tokenExpirationBufferMS) {
+		console.log("token expired")
 		[accessToken, refreshToken] = await refreshSpotifyTokens(refreshToken)
 	}
 
@@ -42,16 +79,21 @@ export async function getSpotifyAccessToken() {
 
 // TODO: can we use then instead of async await here
 export async function refreshSpotifyTokens(refreshToken) {
-	const spotifyTokenURL = 'https://accounts.spotify.com/api/token'
+	console.log("refreshing tokens")
+	const spotifyTokenURL = "https://accounts.spotify.com/api/token"
 
 	const query = new URLSearchParams({
-		grant_type: 'authorization_code',
+		grant_type: "refresh_token",
 		refresh_token: refreshToken,
 		client_id: process.env.spotifyClientId,
 	})
 
+	const headers = new Headers({
+		"Content-Type": "application/x-www-form-urlencoded"
+	})
 	const fetchOptions = {
-		method: 'POST',
+		headers,
+		method: "POST",
 		body: query.toString()
 	}
 
@@ -61,48 +103,28 @@ export async function refreshSpotifyTokens(refreshToken) {
 			if (res.ok) {
 				return res.json()
 			} else {
-				return {
-					error: res.status
-				}
+				return res.json()
 			}
 		})
-
-	// let response
-	// fetch(spotifyTokenURL, fetchOptions)
-	// 	.then((res) => {
-	// 		if (res.ok) {
-	// 			return res.json()
-	// 		} else {
-	// 			return {
-	// 				error: res.status
-	// 			}
-	// 		}
-	// 	})
-	// 	.then((res) => response = res)
 
 	let accessToken = response.access_token
 	let expiresIn = response.expires_in
 	refreshToken = response.refresh_token
 	// If we succeeded in getting new tokens, store them in local storage
-	if (accessToken) {
-		accessToken = null
-		window.localStorage.setItem('spotifyAccessToken', accessToken)
-	} else {
-		window.localStorage.removeItem('spotifyAccessToken')
-	}
-	if (expiresIn) {
-		// `expiresIn` represents seconds. Convert to milliseconds for expiration
-		// time
+	if (accessToken && expiresIn && refreshToken) {
+		console.log("storing tokens and expiration in local storage")
 		let accessTokenExpiration = Date.now() + (expiresIn * 1000)
-		window.localStorage.setItem('spotifyAccessTokenExpiration', accessTokenExpiration.toString())
+		window.localStorage.setItem("spotifyAccessToken", accessToken)
+		window.localStorage.setItem("spotifyAccessTokenExpiration", accessTokenExpiration.toString())
+		window.localStorage.setItem("spotifyRefreshToken", refreshToken)
 	} else {
-		window.localStorage.removeItem('spotifyAccessTokenExpiration')
-	}
-	if (refreshToken) {
+		console.log("didn't get refreshed tokens")
+		console.log("removing tokens from local storage")
+		accessToken = null
 		refreshToken = null
-		window.localStorage.setItem('spotifyRefreshToken', refreshToken)
-	} else {
-		window.localStorage.removeItem('spotifyRefreshToken')
+		window.localStorage.removeItem("spotifyAccessToken")
+		window.localStorage.removeItem("spotifyAccessTokenExpiration")
+		window.localStorage.removeItem("spotifyRefreshToken")
 	}
 
 	return [accessToken, refreshToken]
@@ -164,5 +186,29 @@ export function generateRandomStateString() {
 	let typedNums = new Uint8Array(length)
 	typedNums = window.crypto.getRandomValues(typedNums)
 	const nums = Array.from(typedNums)
-	return nums.map((num) => num.toString(16)).join('')
+	return nums.map((num) => num.toString(16)).join("")
+}
+
+export async function generateCodeVerifierAndChallenge() {
+	let typedNums = new Uint8Array(64)
+	typedNums = window.crypto.getRandomValues(typedNums)
+	const nums = Array.from(typedNums)
+	const verifier = nums.map((num) => num.toString(16)).join("")
+	const encoder = new TextEncoder()
+	const verifierArray = encoder.encode(verifier)
+	const hash = await window.crypto.subtle.digest("SHA-256", verifierArray.buffer)
+	const decoder = new TextDecoder()
+	const hashArray = Array.from(new Uint8Array(hash))
+	const hashString = String.fromCharCode(...hashArray)
+	const challenge = stringToBase64URL(hashString)
+
+	return [verifier, challenge]
+}
+
+function stringToBase64URL(input) {
+	const result = window.btoa(input)
+		.replaceAll("=", "")
+		.replaceAll("+", "-")
+		.replaceAll("/", "_")
+	return result
 }

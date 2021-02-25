@@ -66,6 +66,8 @@ export async function getSpotifyAccessToken() {
 	// If we're within 3 minutes of an expired token, go ahead and treat it as
 	// expired so we can get a new one
 	// const tokenExpirationBufferMS = 180_000
+
+	// TODO: This is temporary for debugging refresh method
 	const tokenExpirationBufferMS = 3_550_000
 	const tokenTimeLeftMS = accessTokenExpiration - Date.now()
 	console.log("time left:", tokenTimeLeftMS / 1000)

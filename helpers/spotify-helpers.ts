@@ -22,8 +22,6 @@ export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) 
 	const response = await fetch(spotifyTokenURL, fetchOptions)
 		.then((res) => res.json())
 
-	console.log(JSON.stringify(response))
-
 	let accessToken = response.access_token
 	let expiresIn = response.expires_in
 	let refreshToken = response.refresh_token
@@ -161,4 +159,86 @@ function stringToBase64URL(input) {
 		.replaceAll("+", "-")
 		.replaceAll("/", "_")
 	return result
+}
+
+export async function getSpotifyUserPlaylists() {
+	let accessToken = await getSpotifyAccessToken()
+	console.log("Fetching spotify user playlists")
+	const spotifyPlaylistsURL = new URL("https://api.spotify.com/v1/me/playlists")
+	let spotifyFetchOptions = {
+		method: "GET",
+		headers: {
+			"Accept": "application/json",
+			"Content-Type": "application/json",
+			"Authorization": "Bearer " + accessToken
+		}
+	}
+
+	let playlistResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
+		.then((res) => res.json())
+	console.log(JSON.stringify(playlistResponse))
+	let playlists = playlistResponse.items.map((item) => {
+		return {
+			id: item.id,
+			name: item.name,
+			image: item.images[0] ? item.images[0].url : null,
+			totalTracks: item.tracks.total,
+			tracksURL: item.tracks.href
+		}
+	})
+
+	const playlistTrackPromises: Promise<any>[] = playlists.map((playlist) => {
+		return getSpotifyPlaylistTracks({
+			id: playlist.id,
+			limit: process.env.spotifyReducedTrackCount,
+			offset: 0
+		})
+	})
+	await Promise.allSettled(playlistTrackPromises)
+		.then((results) => results.map((trackResult, index) => {
+			if (trackResult.status === "fulfilled") {
+				playlists[index]["tracks"] = trackResult.value
+			}
+		}))
+
+	return playlists
+}
+
+export async function getSpotifyPlaylistTracks({
+	id,
+	limit,
+	offset
+}) {
+	const accessToken = await getSpotifyAccessToken()
+	const market = "from_token"
+	const fields = "items(track(name,artists(name)))"
+	const spotifyPlaylistsURL = new URL(`https://api.spotify.com/v1/playlists/${id}/tracks`)
+	spotifyPlaylistsURL.searchParams.set("fields", fields)
+	spotifyPlaylistsURL.searchParams.set("market", market)
+	if (limit) {
+		spotifyPlaylistsURL.searchParams.set("limit", limit)
+	}
+	if (offset) {
+		spotifyPlaylistsURL.searchParams.set("offset", offset)
+	}
+
+	let spotifyFetchOptions = {
+		method: "GET",
+		headers: {
+			"Accept": "application/json",
+			"Content-Type": "application/json",
+			"Authorization": "Bearer " + accessToken
+		}
+	}
+	let trackResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
+		.then((res) => res.json())
+
+	const tracks = trackResponse.items.map((item) => {
+		return {
+			name: item.track.name,
+			artists: item.track.artists.map((artist) => artist.name).join(", ")
+		}
+	})
+
+	return tracks
 }

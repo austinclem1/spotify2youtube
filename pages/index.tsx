@@ -1,17 +1,10 @@
 import Head from "next/head"
 
-import Button from "react-bootstrap/Button"
 import Container from "react-bootstrap/Container"
-import Row from "react-bootstrap/Row"
 import Spinner from "react-bootstrap/Spinner"
 import Jumbotron from "react-bootstrap/Jumbotron"
 
-import Cookies from "cookies"
-import { 
-	getSpotifyAccessToken,
-	refreshSpotifyTokens,
-	getSpotifyTokensFromCode
-} from "../helpers/spotify-helpers"
+import { getSpotifyAccessToken } from "../helpers/spotify-helpers"
 import { useEffect } from "react"
 import { useRouter } from "next/router"
 

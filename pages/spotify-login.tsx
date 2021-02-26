@@ -2,7 +2,11 @@ import Button from "react-bootstrap/Button"
 import Container from "react-bootstrap/Container"
 import Row from "react-bootstrap/Row"
 import Spinner from "react-bootstrap/Spinner"
-import { getSpotifyTokensFromCode, generateRandomStateString, generateCodeVerifierAndChallenge } from "../helpers/spotify-helpers"
+import {
+	getSpotifyTokensFromCode,
+	generateRandomStateString,
+	generateCodeVerifierAndChallenge
+} from "../helpers/spotify-helpers"
 import { useEffect } from "react"
 import { useRouter } from "next/router"
 

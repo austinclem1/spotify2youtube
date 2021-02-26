@@ -1,4 +1,3 @@
-import Cookies from "cookies"
 
 export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) {
 	const spotifyTokenURL = "https://accounts.spotify.com/api/token"

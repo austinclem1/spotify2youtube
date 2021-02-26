@@ -12,6 +12,8 @@ import Spinner from "react-bootstrap/Spinner"
 import React, { useEffect, useRef, useState } from "react"
 import useSWR from "swr"
 
+import { getSpotifyUserPlaylists } from "../helpers/spotify-helpers"
+
 import fetcher from "../libs/fetcher"
 
 
@@ -105,7 +107,8 @@ function SpotifyPlaylists() {
 			_setSelectedPlaylist(id)
 		}
 	}
-	const { data: playlists, error } = useSWR("api/spotify-user-playlists", fetcher)
+	// const { data: playlists, error } = useSWR("api/spotify-user-playlists", fetcher)
+	const { data: playlists, error } = useSWR("spotifyUserPlaylists", getSpotifyUserPlaylists)
 	return(
 		<Container className="text-center">
 			<Jumbotron>

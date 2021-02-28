@@ -10,6 +10,7 @@ import Navbar from "react-bootstrap/Navbar"
 import Pagination from "react-bootstrap/Pagination"
 import Row from "react-bootstrap/Row"
 import Spinner from "react-bootstrap/Spinner"
+import Table from "react-bootstrap/Table"
 import React, { useEffect, useRef, useState } from "react"
 import useSWR from "swr"
 
@@ -20,65 +21,63 @@ import fetcher from "../libs/fetcher"
 
 const tracksPerPage = 10
 
-function TrackList(props) {
-	const { playlist, isSelected } = props
+function TracksTable(props) {
+	const { tracks, isSelected } = props
 	const [currentPage, setCurrentPage] = useState(1)
 	const [startedFetchingTracks, setStartedFetchingTracks] = useState(false)
-	// const { data: done, error } = useSWR("spotifyFetchTracks", fetchAllPlaylistTracks(playlist))
+	const fetchFunction = () => {
+		if (isSelected) {
+			console.log("got here")
+			fetchAllPlaylistTracks(playlist)
+		}
+	}
+	const { data: doneLoadingTracks } = useSWR("spotifyFetchTracks", fetchFunction)
 	let numTracksShown = isSelected ? playlist.totalTracks : process.env.spotifyReducedTrackCount
 	const color = isSelected ? "primary" : "light"
 	
-	let pageItems = []
-	const trackStartIndex = (currentPage - 1) * tracksPerPage
-	const trackStopIndex = Math.min(currentPage * tracksPerPage, playlist.totalTracks)
-	let loading = playlist.tracks.length < trackStopIndex
-	if (isSelected) {
-		if (!startedFetchingTracks) {
-			fetchAllPlaylistTracks(playlist)
-			setStartedFetchingTracks(true)
-		}
-		// TODO determine where to put ellipses for playlist with many pages
-		const numPages = Math.ceil(playlist.totalTracks / tracksPerPage)
-		for (let i=1; i<=numPages; i++) {
-			pageItems.push(
-				<Pagination.Item key={i} active={i === currentPage} onClick={() => setCurrentPage(i)}>
-					{i}
-				</Pagination.Item>
-			)
-		}
-	}
+	// let pageItems = []
+	// const trackStartIndex = (currentPage - 1) * tracksPerPage
+	// const trackStopIndex = Math.min(currentPage * tracksPerPage, playlist.totalTracks)
+	// let loading = playlist.tracks.length < trackStopIndex
+	// if (isSelected) {
+	// 	if (!startedFetchingTracks) {
+	// 		fetchAllPlaylistTracks(playlist)
+	// 		setStartedFetchingTracks(true)
+	// 	}
+	// 	// TODO determine where to put ellipses for playlist with many pages
+	// 	const numPages = Math.ceil(playlist.totalTracks / tracksPerPage)
+	// 	for (let i=1; i<=numPages; i++) {
+	// 		pageItems.push(
+	// 			<Pagination.Item key={i} active={i === currentPage} onClick={() => setCurrentPage(i)}>
+	// 				{i}
+	// 			</Pagination.Item>
+	// 		)
+	// 	}
+	// }
 
-	if (isSelected) {
-		return(
-			<ListGroup>
-				<Pagination>{pageItems}</Pagination>
-				<ListGroup horizontal>
-					<ListGroup.Item variant={"dark"} className="p-1 w-50"><strong>Title</strong></ListGroup.Item>
-					<ListGroup.Item variant={"dark"} className="p-1 w-50"><strong>Artist</strong></ListGroup.Item>
-				</ListGroup>
-				{loading &&
-					<Spinner animation="border" />
+	return(
+		<Table striped bordered hover>
+			<thead>
+				<tr>
+					<th>Title</th>
+					<th>Artist(s)</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					playlist.tracks.map((track) => 
+						<tr>
+							<td>{track.name}</td>
+							<td>{track.artists}</td>
+						</tr>
+					)
 				}
-				{!loading && playlist.tracks.slice(trackStartIndex, trackStopIndex).map((track) => 
-					<ListGroup horizontal>
-						<ListGroup.Item variant={color} className="p-1 w-50">{track.name}</ListGroup.Item>
-						<ListGroup.Item variant={color} className="p-1 w-50">{track.artists}</ListGroup.Item>
-					</ListGroup>
-				)}
-			</ListGroup>
-		)
-	} else {
-		return(
-			<ListGroup>
-				{playlist.tracks.slice(0, numTracksShown).map((track) => 
-					<ListGroup.Item variant={color} className="p-1">{track.name}</ListGroup.Item>
-				)}
-				{playlist.totalTracks > numTracksShown + 1 &&
-					<ListGroup.Item variant={color} className="p-1">{playlist.totalTracks - numTracksShown} More...</ListGroup.Item>
-				}
-			</ListGroup>
-		)
-	}
+			{!doneLoadingTracks && isSelected &&
+				<Spinner animation="border" />
+			}
+			</tbody>
+		</Table>
+	)
 }
 
 function PlaylistCard(props) {
@@ -115,8 +114,8 @@ function PlaylistCard(props) {
 				<Card.Body>
 					<p>Current order: {currentOrder}</p>
 					<Row className="align-middle">
-						<Col xs={4}><Image src={playlist.image} fluid /></Col>
-						<Col xs={8} className="align-self-center">
+						<Col xs={12}><Image src={playlist.image} fluid /></Col>
+						<Col xs={12} className="align-self-center">
 							<Card.Text>
 								<TrackList 
 									playlist={playlist}

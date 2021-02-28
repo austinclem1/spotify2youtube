@@ -51,7 +51,6 @@ export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) 
 }
 
 export async function getSpotifyAccessToken() {
-	console.log("retreiving access token")
 	let accessToken = window.localStorage.getItem("spotifyAccessToken")
 	let accessTokenExpiration = parseInt(window.localStorage.getItem("spotifyAccessTokenExpiration"))
 	let refreshToken = window.localStorage.getItem("spotifyRefreshToken")
@@ -67,7 +66,6 @@ export async function getSpotifyAccessToken() {
 	// TODO: This is temporary for debugging refresh method
 	const tokenExpirationBufferMS = 3_550_000
 	const tokenTimeLeftMS = accessTokenExpiration - Date.now()
-	console.log("time left:", tokenTimeLeftMS / 1000)
 	if (tokenTimeLeftMS < tokenExpirationBufferMS) {
 		console.log("token expired");
 		[accessToken, refreshToken] = await refreshSpotifyTokens(refreshToken)
@@ -176,7 +174,6 @@ export async function getSpotifyUserPlaylists() {
 
 	let playlistResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
 		.then((res) => res.json())
-	console.log(JSON.stringify(playlistResponse))
 	let playlists = playlistResponse.items.map((item) => {
 		return {
 			id: item.id,
@@ -190,14 +187,16 @@ export async function getSpotifyUserPlaylists() {
 	const playlistTrackPromises: Promise<any>[] = playlists.map((playlist) => {
 		return getSpotifyPlaylistTracks({
 			id: playlist.id,
-			limit: process.env.spotifyReducedTrackCount,
+			// limit: process.env.spotifyReducedTrackCount,
+			limit: 10,
 			offset: 0
 		})
 	})
 	await Promise.allSettled(playlistTrackPromises)
 		.then((results) => results.map((trackResult, index) => {
 			if (trackResult.status === "fulfilled") {
-				playlists[index]["tracks"] = trackResult.value
+				const { tracks } = trackResult.value
+				playlists[index]["tracks"] = tracks
 			}
 		}))
 
@@ -211,7 +210,7 @@ export async function getSpotifyPlaylistTracks({
 }) {
 	const accessToken = await getSpotifyAccessToken()
 	const market = "from_token"
-	const fields = "items(track(name,artists(name)))"
+	const fields = "items(track(name,artists(name))),next"
 	const spotifyPlaylistsURL = new URL(`https://api.spotify.com/v1/playlists/${id}/tracks`)
 	spotifyPlaylistsURL.searchParams.set("fields", fields)
 	spotifyPlaylistsURL.searchParams.set("market", market)
@@ -236,9 +235,50 @@ export async function getSpotifyPlaylistTracks({
 	const tracks = trackResponse.items.map((item) => {
 		return {
 			name: item.track.name,
-			artists: item.track.artists.map((artist) => artist.name).join(", ")
+			artists: item.track.artists.map((artist) => artist.name).join(", "),
 		}
 	})
+	const moreTracksURL = trackResponse.next
 
-	return tracks
+	return { tracks, moreTracksURL }
+}
+
+export async function fetchAllPlaylistTracks(playlist) {
+	if (playlist.tracks.length === playlist.totalTracks) {
+		return true
+	}
+	const id = playlist.id
+	const offset = playlist.tracks.length
+	const limit = 100
+	console.log(`beginning all tracks fetch for ${playlist.name}`)
+	let { tracks, moreTracksURL } = await getSpotifyPlaylistTracks({
+		id,
+		offset,
+		limit
+	})
+	playlist.tracks.push(...tracks)
+	while (moreTracksURL) {
+		const accessToken = await getSpotifyAccessToken()
+		let spotifyFetchOptions = {
+			method: "GET",
+			headers: {
+				"Accept": "application/json",
+				"Content-Type": "application/json",
+				"Authorization": "Bearer " + accessToken
+			}
+		}
+		let trackResponse = await fetch(moreTracksURL, spotifyFetchOptions)
+			.then((res) => res.json())
+		moreTracksURL = trackResponse.next
+		const newTracks = trackResponse.items.map((item) => {
+			return {
+				name: item.track.name,
+				artists: item.track.artists.map((artist) => artist.name).join(", "),
+			}
+		})
+		playlist.tracks.push(...newTracks)
+		console.log(`fetched ${playlist.tracks.length}/${playlist.totalTracks} tracks`)
+	}
+
+	return true
 }

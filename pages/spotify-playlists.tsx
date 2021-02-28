@@ -7,29 +7,59 @@ import Jumbotron from "react-bootstrap/Jumbotron"
 import Link from "next/link"
 import ListGroup from "react-bootstrap/ListGroup"
 import Navbar from "react-bootstrap/Navbar"
+import Pagination from "react-bootstrap/Pagination"
 import Row from "react-bootstrap/Row"
 import Spinner from "react-bootstrap/Spinner"
 import React, { useEffect, useRef, useState } from "react"
 import useSWR from "swr"
 
-import { getSpotifyUserPlaylists } from "../helpers/spotify-helpers"
+import { getSpotifyUserPlaylists, fetchAllPlaylistTracks } from "../helpers/spotify-helpers"
 
 import fetcher from "../libs/fetcher"
 
 
+const tracksPerPage = 10
+
 function TrackList(props) {
-	const { tracks, isSelected } = props
-	let numTracksShown = isSelected ? tracks.length : process.env.spotifyReducedTrackCount
+	const { playlist, isSelected } = props
+	const [currentPage, setCurrentPage] = useState(1)
+	const [startedFetchingTracks, setStartedFetchingTracks] = useState(false)
+	// const { data: done, error } = useSWR("spotifyFetchTracks", fetchAllPlaylistTracks(playlist))
+	let numTracksShown = isSelected ? playlist.totalTracks : process.env.spotifyReducedTrackCount
 	const color = isSelected ? "primary" : "light"
+	
+	let pageItems = []
+	const trackStartIndex = (currentPage - 1) * tracksPerPage
+	const trackStopIndex = Math.min(currentPage * tracksPerPage, playlist.totalTracks)
+	let loading = playlist.tracks.length < trackStopIndex
+	if (isSelected) {
+		if (!startedFetchingTracks) {
+			fetchAllPlaylistTracks(playlist)
+			setStartedFetchingTracks(true)
+		}
+		// TODO determine where to put ellipses for playlist with many pages
+		const numPages = Math.ceil(playlist.totalTracks / tracksPerPage)
+		for (let i=1; i<=numPages; i++) {
+			pageItems.push(
+				<Pagination.Item key={i} active={i === currentPage} onClick={() => setCurrentPage(i)}>
+					{i}
+				</Pagination.Item>
+			)
+		}
+	}
 
 	if (isSelected) {
 		return(
 			<ListGroup>
+				<Pagination>{pageItems}</Pagination>
 				<ListGroup horizontal>
 					<ListGroup.Item variant={"dark"} className="p-1 w-50"><strong>Title</strong></ListGroup.Item>
 					<ListGroup.Item variant={"dark"} className="p-1 w-50"><strong>Artist</strong></ListGroup.Item>
 				</ListGroup>
-				{tracks.map((track) => 
+				{loading &&
+					<Spinner animation="border" />
+				}
+				{!loading && playlist.tracks.slice(trackStartIndex, trackStopIndex).map((track) => 
 					<ListGroup horizontal>
 						<ListGroup.Item variant={color} className="p-1 w-50">{track.name}</ListGroup.Item>
 						<ListGroup.Item variant={color} className="p-1 w-50">{track.artists}</ListGroup.Item>
@@ -40,11 +70,11 @@ function TrackList(props) {
 	} else {
 		return(
 			<ListGroup>
-				{tracks.slice(0, numTracksShown).map((track) => 
+				{playlist.tracks.slice(0, numTracksShown).map((track) => 
 					<ListGroup.Item variant={color} className="p-1">{track.name}</ListGroup.Item>
 				)}
-				{tracks.length > numTracksShown + 1 &&
-					<ListGroup.Item variant={color} className="p-1">{tracks.length - numTracksShown} More...</ListGroup.Item>
+				{playlist.totalTracks > numTracksShown + 1 &&
+					<ListGroup.Item variant={color} className="p-1">{playlist.totalTracks - numTracksShown} More...</ListGroup.Item>
 				}
 			</ListGroup>
 		)
@@ -57,7 +87,6 @@ function PlaylistCard(props) {
 	useEffect(() => {
 		if (isSelected) {
 			const position = cardRef.current.getBoundingClientRect()
-			console.log(position)
 			// cardRef.current.scrollIntoView(scrollOptions)
 			window.scrollTo({
 				top: position.top + window.scrollY - 20,
@@ -66,6 +95,11 @@ function PlaylistCard(props) {
 			})
 		}
 	})
+
+	const selectPlaylist = (id) => {
+		setSelectedPlaylist(id)
+	}
+
 	let currentOrder = order
 	if (isSelected && order % 2 === 0) {
 		currentOrder -= 2
@@ -74,7 +108,7 @@ function PlaylistCard(props) {
 	const cardWidth = isSelected ? 12 : 6
 	return(
 		<Col xs={{span: 12, order: order}} lg={{span: cardWidth, order: currentOrder}} className="my-3 mx-0">
-			<Card ref={cardRef} bg={color} className="h-100" onClick={() => setSelectedPlaylist(playlist.id)} key={playlist.id}>
+			<Card ref={cardRef} bg={color} className="h-100" onClick={() => selectPlaylist(playlist.id)} key={playlist.id}>
 				<Card.Header className="text-center" as="h4">
 					<strong>{playlist.name}</strong>
 				</Card.Header>
@@ -85,13 +119,15 @@ function PlaylistCard(props) {
 						<Col xs={8} className="align-self-center">
 							<Card.Text>
 								<TrackList 
-									tracks={playlist.tracks}
+									playlist={playlist}
 									isSelected={isSelected}
 								/>
 							</Card.Text>
 						</Col>
 					</Row>
-					<a className="stretched-link" role="button" />
+					{ !isSelected &&
+						<a className="stretched-link" role="button" />
+					}
 				</Card.Body>
 		</Card>
 	</Col>
@@ -101,11 +137,12 @@ function PlaylistCard(props) {
 function SpotifyPlaylists() {
 	const [selectedPlaylist, _setSelectedPlaylist] = useState(null)
 	const setSelectedPlaylist = (id) => {
-		if (id === selectedPlaylist) {
-			_setSelectedPlaylist(null)
-		} else {
-			_setSelectedPlaylist(id)
-		}
+		// if (id === selectedPlaylist) {
+		// 	_setSelectedPlaylist(null)
+		// } else {
+		// 	_setSelectedPlaylist(id)
+		// }
+		_setSelectedPlaylist(id)
 	}
 	// const { data: playlists, error } = useSWR("api/spotify-user-playlists", fetcher)
 	const { data: playlists, error } = useSWR("spotifyUserPlaylists", getSpotifyUserPlaylists)

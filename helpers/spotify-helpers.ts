@@ -207,7 +207,9 @@ export async function getSpotifyUserPlaylists() {
 		.then((results) => results.map((trackResult, index) => {
 			if (trackResult.status === "fulfilled") {
 				const { tracks } = trackResult.value
-				playlists[index]["tracks"] = tracks
+				const thisPlaylist = playlists[index]
+				thisPlaylist["tracks"] = tracks
+				thisPlaylist["doneLoadingTracks"] = tracks.length === thisPlaylist.totalTracks
 			}
 		}))
 
@@ -273,6 +275,7 @@ export async function fetchAllPlaylistTracks(playlist) {
 		limit
 	})
 	playlist.tracks.push(...tracks)
+	playlist.doneLoadingTracks = tracks.length === playlist.totalTracks
 	while (moreTracksURL) {
 		const accessToken = await getSpotifyAccessToken()
 		let spotifyFetchOptions = {
@@ -298,7 +301,12 @@ export async function fetchAllPlaylistTracks(playlist) {
 			}
 		})
 		playlist.tracks.push(...newTracks)
+		playlist.doneLoadingTracks = tracks.length === playlist.totalTracks
 		console.log(`fetched ${playlist.tracks.length}/${playlist.totalTracks} tracks`)
+	}
+
+	if (playlist.doneLoadingTracks) {
+		console.log(`done loading tracks for ${playlist.name}`)
 	}
 
 	return true

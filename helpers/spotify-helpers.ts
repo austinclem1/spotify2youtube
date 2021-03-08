@@ -20,7 +20,12 @@ export async function getSpotifyTokensFromCode(code, redirectURI, codeVerifier) 
 	}
 
 	const response = await fetch(spotifyTokenURL, fetchOptions)
-		.then((res) => res.json())
+		.then((res) => {if (!res.ok) {
+			const error = new Error()
+			throw error
+		} else {
+			return res.json()
+		}})
 
 	let accessToken = response.access_token
 	let expiresIn = response.expires_in
@@ -96,13 +101,12 @@ async function refreshSpotifyTokens(refreshToken) {
 
 	// TODO: Find better way to handle error here
 	const response = await fetch(spotifyTokenURL, fetchOptions)
-		.then((res) => {
-			if (res.ok) {
-				return res.json()
-			} else {
-				return res.json()
-			}
-		})
+		.then((res) => {if (!res.ok) {
+			const error = new Error()
+			throw error
+		} else {
+			return res.json()
+		}})
 
 	let accessToken = response.access_token
 	let expiresIn = response.expires_in
@@ -173,7 +177,6 @@ export async function getSpotifyUserPlaylists() {
 	}
 
 	let playlistResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
-		.then((res) => res.json())
 	let playlists = playlistResponse.items.map((item) => {
 		return {
 			id: item.id,
@@ -183,6 +186,12 @@ export async function getSpotifyUserPlaylists() {
 			tracksURL: item.tracks.href
 		}
 	})
+		.then((res) => {if (!res.ok) {
+			const error = new Error()
+			throw error
+		} else {
+			return res.json()
+		}})
 
 	const playlistTrackPromises: Promise<any>[] = playlists.map((playlist) => {
 		return getSpotifyPlaylistTracks({
@@ -230,7 +239,12 @@ export async function getSpotifyPlaylistTracks({
 		}
 	}
 	let trackResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
-		.then((res) => res.json())
+		.then((res) => {if (!res.ok) {
+			const error = new Error()
+			throw error
+		} else {
+			return res.json()
+		}})
 
 	const tracks = trackResponse.items.map((item) => {
 		return {
@@ -268,7 +282,12 @@ export async function fetchAllPlaylistTracks(playlist) {
 			}
 		}
 		let trackResponse = await fetch(moreTracksURL, spotifyFetchOptions)
-			.then((res) => res.json())
+			.then((res) => {if (!res.ok) {
+				const error = new Error()
+				throw error
+			} else {
+				return res.json()
+			}})
 		moreTracksURL = trackResponse.next
 		const newTracks = trackResponse.items.map((item) => {
 			return {

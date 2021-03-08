@@ -274,6 +274,7 @@ export async function fetchAllPlaylistTracks(playlist) {
 		offset,
 		limit
 	})
+	console.log(`got ${tracks.length} new tracks, pushing`)
 	playlist.tracks.push(...tracks)
 	playlist.doneLoadingTracks = tracks.length === playlist.totalTracks
 	while (moreTracksURL) {
@@ -310,4 +311,51 @@ export async function fetchAllPlaylistTracks(playlist) {
 	}
 
 	return true
+}
+
+export async function getSomePlaylistTracks(query) {
+	const queryParams = new URLSearchParams(query)
+	const accessToken = await getSpotifyAccessToken()
+	const id = queryParams.get("id")
+	const limit = queryParams.has("limit") ? parseInt(queryParams.get("limit")) : 100
+	const offset = queryParams.has("offset") ? parseInt(queryParams.get("offset")) : 0
+	const market = "from_token"
+	const fields = "items(track(name,artists(name))),next"
+
+	const fetchParams = new URLSearchParams({
+		limit: limit.toString(),
+		offset: offset.toString(),
+		market,
+		fields
+	})
+	const tracksURL = new URL(`https://api.spotify.com/v1/playlists/${id}/tracks`)
+	tracksURL.search = fetchParams.toString()
+	let fetchOptions = {
+		method: "GET",
+		headers: {
+			"Accept": "application/json",
+			"Content-Type": "application/json",
+			"Authorization": "Bearer " + accessToken
+		}
+	}
+	let trackResponse = await fetch(tracksURL.href, fetchOptions)
+		.then((res) => {if (!res.ok) {
+			const error = new Error()
+			throw error
+		} else {
+			return res.json()
+		}})
+
+	// console.log(JSON.stringify(trackResponse))
+
+	const tracks = trackResponse.items.map((item) => {
+		return {
+			name: item.track.name,
+			artists: item.track.artists.map((artist) => artist.name).join(", "),
+		}
+	})
+
+	const nextPageOffset = offset + limit
+
+	return { tracks, nextPageOffset }
 }

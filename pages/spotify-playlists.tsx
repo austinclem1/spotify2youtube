@@ -12,49 +12,64 @@ import Row from "react-bootstrap/Row"
 import Spinner from "react-bootstrap/Spinner"
 import Table from "react-bootstrap/Table"
 import React, { useEffect, useRef, useState } from "react"
-import useSWR from "swr"
+import useSWR, { useSWRInfinite } from "swr"
 
-import { getSpotifyUserPlaylists, fetchAllPlaylistTracks } from "../helpers/spotify-helpers"
+import { getSpotifyUserPlaylists, getSomePlaylistTracks, getSpotifyAccessToken } from "../helpers/spotify-helpers"
 
 import fetcher from "../libs/fetcher"
 
-
-const tracksPerPage = 10
-
 function TracksTable(props) {
-	const { tracks, isSelected } = props
-	const [currentPage, setCurrentPage] = useState(1)
-	const [startedFetchingTracks, setStartedFetchingTracks] = useState(false)
-	const fetchFunction = () => {
-		if (isSelected) {
-			console.log("got here")
-			fetchAllPlaylistTracks(playlist)
-		}
-	}
-	const { data: doneLoadingTracks } = useSWR("spotifyFetchTracks", fetchFunction)
-	let numTracksShown = isSelected ? playlist.totalTracks : process.env.spotifyReducedTrackCount
-	const color = isSelected ? "primary" : "light"
-	
-	// let pageItems = []
-	// const trackStartIndex = (currentPage - 1) * tracksPerPage
-	// const trackStopIndex = Math.min(currentPage * tracksPerPage, playlist.totalTracks)
-	// let loading = playlist.tracks.length < trackStopIndex
-	// if (isSelected) {
-	// 	if (!startedFetchingTracks) {
-	// 		fetchAllPlaylistTracks(playlist)
-	// 		setStartedFetchingTracks(true)
-	// 	}
-	// 	// TODO determine where to put ellipses for playlist with many pages
-	// 	const numPages = Math.ceil(playlist.totalTracks / tracksPerPage)
-	// 	for (let i=1; i<=numPages; i++) {
-	// 		pageItems.push(
-	// 			<Pagination.Item key={i} active={i === currentPage} onClick={() => setCurrentPage(i)}>
-	// 				{i}
-	// 			</Pagination.Item>
-	// 		)
-	// 	}
-	// }
+	const { playlistID, playlistLength, isSelected } = props
 
+	const reducedTrackCount = parseInt(process.env.spotifyReducedTrackCount)
+
+	const getKey = (pageIndex, previousPageData) => {
+		if (previousPageData && !previousPageData.tracks) return null;
+
+		if (pageIndex === 0) return `?playlist-tracks&id=${playlistID}&limit=${reducedTrackCount}`
+
+		return `?playlist-tracks&id=${playlistID}&limit=10&offset=${previousPageData.nextPageOffset}`
+	}
+
+	const { data, error, mutate, size, setSize, isValidating } = useSWRInfinite(
+		getKey,
+		getSomePlaylistTracks,
+		{
+			initialSize: 1,
+			revalidateOnFocus: false,
+			revalidateAll: false
+		}
+	)
+
+	const color = isSelected ? "primary" : "light"
+	const arrayOfTrackArrays = data ? data.map(res => res.tracks) : []
+	const tracks = [].concat(...arrayOfTrackArrays)
+	const tableData = isSelected ? tracks.map(track => 
+		<tr>
+			<td><strong>{track.name}</strong></td>
+			<td><strong>{track.artists}</strong></td>
+		</tr>
+	) : tracks.slice(0, reducedTrackCount).map(track =>
+		<tr>
+			<td>{track.name}</td>
+			<td>{track.artists}</td>
+		</tr>
+	)
+
+	const isLoadingInitialData = !data && !error
+	const isLoadingMore =
+		isLoadingInitialData ||
+		(size > 1 && data && typeof data[size - 1] === "undefined")
+	const allTracksLoaded = tracks.length === playlistLength
+
+	const tracksNotShown = playlistLength - reducedTrackCount
+
+	if (isSelected) {
+		// console.log(arrayOfTrackArrays)
+		// console.log(tracks)
+		// console.log(JSON.stringify(data))
+	}
+	
 	return(
 		<Table striped bordered hover>
 			<thead>
@@ -64,17 +79,24 @@ function TracksTable(props) {
 				</tr>
 			</thead>
 			<tbody>
-				{
-					playlist.tracks.map((track) => 
-						<tr>
-							<td>{track.name}</td>
-							<td>{track.artists}</td>
-						</tr>
-					)
+				{tableData}
+				{!isSelected && tracksNotShown > 0 &&
+					<tr>
+						<td colSpan={2}>{`${tracksNotShown} more...`}</td>
+					</tr>
 				}
-			{!doneLoadingTracks && isSelected &&
-				<Spinner animation="border" />
-			}
+				{isSelected && !allTracksLoaded &&
+					<tr>
+						<td colSpan={2}>
+							{!isLoadingMore &&
+								<Button variant="light" onClick={() => setSize(size + 1)}>{"Load More"}</Button>
+							}
+							{isLoadingMore &&
+								<Spinner animation="border" />
+							}
+						</td>
+					</tr>
+				}
 			</tbody>
 		</Table>
 	)
@@ -82,45 +104,58 @@ function TracksTable(props) {
 
 function PlaylistCard(props) {
 	const cardRef = useRef(null)
-	const { playlist, order, isSelected, setSelectedPlaylist } = props
+	const { playlist, index, order, isSelected, setSelectedPlaylistIndex } = props
+
+	const [justSelected, setJustSelected] = useState(false)
+
 	useEffect(() => {
-		if (isSelected) {
+		if (justSelected) {
 			const position = cardRef.current.getBoundingClientRect()
-			// cardRef.current.scrollIntoView(scrollOptions)
 			window.scrollTo({
 				top: position.top + window.scrollY - 20,
 				left: 0,
 				behavior: "smooth"
 			})
+			setJustSelected(false)
 		}
 	})
 
-	const selectPlaylist = (id) => {
-		setSelectedPlaylist(id)
+	const selectPlaylist = () => {
+		if (!isSelected) {
+			setSelectedPlaylistIndex(parseInt(index))
+			setJustSelected(true)
+		}
 	}
 
 	let currentOrder = order
 	if (isSelected && order % 2 === 0) {
-		currentOrder -= 2
+		currentOrder = order - 2
+		// currentOrder = order - 1
+		// currentOrder = "first"
 	}
 	const color = isSelected ? "primary" : "light"
 	const cardWidth = isSelected ? 12 : 6
 	return(
-		<Col xs={{span: 12, order: order}} lg={{span: cardWidth, order: currentOrder}} className="my-3 mx-0">
-			<Card ref={cardRef} bg={color} className="h-100" onClick={() => selectPlaylist(playlist.id)} key={playlist.id}>
+		<Col xs={{span: 12}} lg={{span: cardWidth}} className="my-3 mx-0">
+			<Card ref={cardRef} bg={color} className="h-100" onClick={() => selectPlaylist()} key={playlist.id}>
 				<Card.Header className="text-center" as="h4">
 					<strong>{playlist.name}</strong>
 				</Card.Header>
 				<Card.Body>
-					<p>Current order: {currentOrder}</p>
 					<Row className="align-middle">
-						<Col xs={12}><Image src={playlist.image} fluid /></Col>
+						<Col xs={isSelected ? {offset: 4, span: 4} : {offset: 3, span: 7}} className="px-3 py-1"><Image src={playlist.image} thumbnail /></Col>
 						<Col xs={12} className="align-self-center">
 							<Card.Text>
-								<TrackList 
-									playlist={playlist}
-									isSelected={isSelected}
-								/>
+								<p><strong>{`${playlist.totalTracks} tracks`}</strong></p>
+								<div style={{maxHeight: "500px", overflowY: "auto"}}>
+									{isSelected &&
+										<TracksTable 
+											playlistID={playlist.id}
+											playlistLength={playlist.totalTracks}
+											isSelected={true}
+										/>
+									}
+								</div>
 							</Card.Text>
 						</Col>
 					</Row>
@@ -134,17 +169,19 @@ function PlaylistCard(props) {
 }
 
 function SpotifyPlaylists() {
-	const [selectedPlaylist, _setSelectedPlaylist] = useState(null)
-	const setSelectedPlaylist = (id) => {
+	const [selectedPlaylistIndex, _setSelectedPlaylistIndex] = useState(null)
+	const setSelectedPlaylistIndex = (index) => {
 		// if (id === selectedPlaylist) {
 		// 	_setSelectedPlaylist(null)
 		// } else {
 		// 	_setSelectedPlaylist(id)
 		// }
-		_setSelectedPlaylist(id)
+		_setSelectedPlaylistIndex(index)
 	}
 	// const { data: playlists, error } = useSWR("api/spotify-user-playlists", fetcher)
 	const { data: playlists, error } = useSWR("spotifyUserPlaylists", getSpotifyUserPlaylists)
+	const selectedPlaylistID = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].id : null
+	const selectedPlaylistTotalTracks = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].totalTracks : null
 	return(
 		<Container className="text-center">
 			<Jumbotron>
@@ -152,14 +189,21 @@ function SpotifyPlaylists() {
 			</Jumbotron>
 			<Row className="m-xs-1 m-sm-2 m-md-3 m-lg-4 m-xl-5">
 				{
-					playlists ? playlists
-						.filter((playlist) => playlist.totalTracks > 0)
-					.map((playlist, index) => <PlaylistCard playlist={playlist} order={index + 1} isSelected={playlist.id === selectedPlaylist} setSelectedPlaylist={setSelectedPlaylist}/>) : <Container>Loading Playlists...<Spinner animation="border" /></Container>
+					playlists && playlists
+						.map((playlist, index) =>
+							<PlaylistCard
+								playlist={playlist}
+								index={index}
+								order={index + 1}
+								isSelected={index === selectedPlaylistIndex}
+								setSelectedPlaylistIndex={setSelectedPlaylistIndex}
+							/>
+						)
 				}
 			</Row>
 			<Navbar bg="dark" fixed="bottom" className="w-100 justify-content-center">
-				<Link href="/youtube-results">
-					<Button disabled={selectedPlaylist === null}>Convert</Button>
+				<Link href={`/youtube-results/${playlists?.[selectedPlaylistIndex]?.id}?totalTracks=${playlists?.[selectedPlaylistIndex]?.totalTracks}`}>
+					<Button disabled={selectedPlaylistIndex === null}>Convert</Button>
 				</Link>
 			</Navbar>
 		</Container>

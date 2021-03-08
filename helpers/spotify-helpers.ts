@@ -177,21 +177,23 @@ export async function getSpotifyUserPlaylists() {
 	}
 
 	let playlistResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
-	let playlists = playlistResponse.items.map((item) => {
-		return {
-			id: item.id,
-			name: item.name,
-			image: item.images[0] ? item.images[0].url : null,
-			totalTracks: item.tracks.total,
-			tracksURL: item.tracks.href
-		}
-	})
 		.then((res) => {if (!res.ok) {
 			const error = new Error()
 			throw error
 		} else {
 			return res.json()
 		}})
+	let playlists = playlistResponse.items
+		.filter((item) => item.tracks.total > 0)
+		.map((item) => {
+			return {
+				id: item.id,
+				name: item.name,
+				image: item.images[0] ? item.images[0].url : null,
+				totalTracks: item.tracks.total,
+				tracksURL: item.tracks.href
+			}
+		})
 
 	const playlistTrackPromises: Promise<any>[] = playlists.map((playlist) => {
 		return getSpotifyPlaylistTracks({

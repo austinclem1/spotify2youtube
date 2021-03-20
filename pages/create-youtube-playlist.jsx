@@ -64,8 +64,8 @@ function CreateYoutubePlaylist(props) {
 )
 
 	return(
-		<Container>
-			<p>Your new YouTube playlist has been created!</p>
+		<Container className="text-center">
+			<h3>Your new YouTube playlist has been created!</h3>
 		</Container>
 	)
 }

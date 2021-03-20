@@ -29,7 +29,7 @@ export default async function handler(req, res) {
 	let trackResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
 		.then((res) => res.json())
 	if (trackResponse.status === 401) {
-		// TODO decide how to deal with this
+		// TODO should request new tokens here
 	}
 	spotifyFetchOptions = {
 		method: 'GET',

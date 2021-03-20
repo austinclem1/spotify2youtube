@@ -31,10 +31,8 @@ export async function getYoutubeSearchResults(query) {
 		method: "GET",
 		headers: {
 			"Accept": "application/json",
-			// "Content-Type": "application/json",
 		}
 	}
-	// console.log("about to make a request to youtube")
 	let response = await fetch(youtubeSearchURL.href, fetchOptions)
 		.then((res) => {if (!res.ok) {
 			const error = new Error()

@@ -37,11 +37,16 @@ function TracksTable(props) {
 		{
 			initialSize: 1,
 			revalidateOnFocus: false,
-			revalidateAll: false
+			revalidateOnReconnect: false,
+			revalidateWhenOffline: false,
+			revalidateWhenHidden: false,
+			revalidateAll: false,
+			refreshInterval: 0,
+			errorRetryCount: 3,
 		}
 	)
 
-	const color = isSelected ? "primary" : "light"
+	const color = isSelected ? "info" : "light"
 	const arrayOfTrackArrays = data ? data.map(res => res.tracks) : []
 	const tracks = [].concat(...arrayOfTrackArrays)
 	const tableData = isSelected ? tracks.map(track => 
@@ -63,12 +68,6 @@ function TracksTable(props) {
 	const allTracksLoaded = tracks.length === playlistLength
 
 	const tracksNotShown = playlistLength - reducedTrackCount
-
-	if (isSelected) {
-		// console.log(arrayOfTrackArrays)
-		// console.log(tracks)
-		// console.log(JSON.stringify(data))
-	}
 	
 	return(
 		<Table striped bordered hover className="font-weight-bold">
@@ -130,10 +129,8 @@ function PlaylistCard(props) {
 	let currentOrder = order
 	if (isSelected && order % 2 === 0) {
 		currentOrder = order - 2
-		// currentOrder = order - 1
-		// currentOrder = "first"
 	}
-	const color = isSelected ? "primary" : "light"
+	const color = isSelected ? "info" : "light"
 	const cardWidth = isSelected ? 12 : 6
 	return(
 		<Col xs={{span: 12}} lg={{span: cardWidth}} className="my-3 mx-0">
@@ -178,8 +175,16 @@ function SpotifyPlaylists() {
 		// }
 		_setSelectedPlaylistIndex(index)
 	}
-	// const { data: playlists, error } = useSWR("api/spotify-user-playlists", fetcher)
-	const { data: playlists, error } = useSWR("spotifyUserPlaylists", getSpotifyUserPlaylists)
+	const { data: playlists, error } = useSWR(
+		"spotifyUserPlaylists",
+		getSpotifyUserPlaylists,
+		{
+				revalidateOnFocus: false,
+				revalidateOnReconnect: false,
+				refreshInterval: 0,
+				errorRetryCount: 3,
+			}
+	)
 	const selectedPlaylistID = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].id : null
 	const selectedPlaylistTotalTracks = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].totalTracks : null
 	return(
@@ -209,94 +214,5 @@ function SpotifyPlaylists() {
 		</Container>
 	)
 }
-
-// async function getSpotifyUserPlaylists(accessToken, refreshToken, context) {
-// 	// Request 10 playlists owned or followed by the current user
-// 	const spotifyPlaylistsURL = "https://api.spotify.com/v1/me/playlists?limit=10"
-// 	let spotifyFetchOptions = {
-// 		method: "GET",
-// 		headers: {
-// 			"Accept": "application/json",
-// 			"Content-Type": "application/json",
-// 			"Authorization": "Bearer " + accessToken
-// 		}
-// 	}
-// 	let playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
-// 	console.log("fetching playlists...")
-// 	if (playlistResponse.status === 401) {
-// 		console.log("Got 401, about to get new tokens")
-// 		[accessToken, refreshToken] = await getSpotifyUserAccessToken({
-// 			authentication: refreshToken,
-// 			useAuthorizationCode: false,
-// 			context,
-// 		})
-// 		spotifyFetchOptions = {
-// 			method: "GET",
-// 			headers: {
-// 				"Accept": "application/json",
-// 				"Content-Type": "application/json",
-// 				"Authorization": "Bearer " + accessToken
-// 			}
-// 		}
-// 		playlistResponse = await fetch(spotifyPlaylistsURL, spotifyFetchOptions)
-// 	}
-// 	const userPlaylistsJson = await playlistResponse.json()
-// 	let userPlaylists = []
-// 	userPlaylistsJson.items.forEach((playlist) => {
-// 		userPlaylists.push({
-// 			name: playlist.name,
-// 			image: playlist.images[0] ? playlist.images[0].url : null,
-// 			id: playlist.id,
-// 		})
-// 	})
-// 	const playlistTrackPromises: Promise<Response>[] = userPlaylistsJson.items.map((playlist) => {
-// 		const tracksURL = playlist.tracks.href
-// 		const fields = "items(track(name,artists(name)))"
-// 		const tracksURLWithQuery = tracksURL +
-// 			"?fields=" + fields +
-// 			"&limit=20"
-// 		return fetch(tracksURLWithQuery, spotifyFetchOptions)
-// 	})
-// 	const allTrackResponses = await Promise.allSettled(playlistTrackPromises)
-// 	const allTrackParsePromises = allTrackResponses.map((result) => {
-// 		if (result.status === "fulfilled") {
-// 			return result.value.json()
-// 		} else {
-// 			return null
-// 		}
-// 	})
-// 	const allParsedTracksResults = await Promise.allSettled(allTrackParsePromises)
-// 	// const allParsedTracks = allParsedTracksResults.map((result) => {
-// 	// 	if (result.status === "fulfilled") {
-// 	// 		return result.value
-// 	// 	} else {
-// 	// 		return null
-// 	// 	}
-// 	// })
-// 	allParsedTracksResults.forEach((result, index) => {
-// 		if (result.status === "fulfilled") {
-// 			userPlaylists[index]["tracks"] = result.value.items.map((item) => {
-// 				return {
-// 					name: item.track.name,
-// 					artists: item.track.artists.map((artist) => artist.name).join(", ")
-// 				}
-// 			})
-// 		}
-// 	})
-
-// 	userPlaylists.sort((a, b) => {
-// 		const nameA = a.name.toUpperCase()
-// 		const nameB = b.name.toUpperCase()
-// 		if (nameA < nameB) {
-// 			return -1
-// 		}
-// 		if (nameA > nameB) {
-// 			return 1
-// 		}
-// 		return 0
-// 	})
-
-// 	return userPlaylists
-// }
 
 export default SpotifyPlaylists

@@ -42,7 +42,6 @@ function SpotifyLogin(props) {
 			getSpotifyTokensFromCode(code, redirectURI, codeVerifier)
 				.then(([accessToken, refreshToken]) => {
 					if (accessToken && refreshToken) {
-						// router.push("/spotify-landing")
 						router.push("/spotify-playlists")
 					}
 				})

@@ -1,7 +1,17 @@
+const he = require("he")
+
 export async function getYoutubeSearchResults(query) {
+	console.log("about to fetch youtube search results")
 	const queryParams = new URLSearchParams(query)
 	const maxResults = queryParams.has("maxResults") ? parseInt(queryParams.get("maxResults")) : 5
-	const q = queryParams.get("q")
+	const trackName = queryParams.get("trackName")
+	const trackArtists = queryParams.get("trackArtists")
+	let q
+	if (queryParams.get("q")) {
+		q = queryParams.get("q")
+	} else {
+		q = trackName + " " + trackArtists
+	}
 	if (!q) {
 		throw new Error("No search terms provided")
 	}
@@ -16,6 +26,7 @@ export async function getYoutubeSearchResults(query) {
 	})
 	const youtubeSearchURL = new URL("https://www.googleapis.com/youtube/v3/search")
 	youtubeSearchURL.search = fetchParams.toString()
+	console.log(youtubeSearchURL.toString())
 	let fetchOptions = {
 		method: "GET",
 		headers: {
@@ -23,6 +34,7 @@ export async function getYoutubeSearchResults(query) {
 			// "Content-Type": "application/json",
 		}
 	}
+	// console.log("about to make a request to youtube")
 	let response = await fetch(youtubeSearchURL.href, fetchOptions)
 		.then((res) => {if (!res.ok) {
 			const error = new Error()
@@ -33,7 +45,11 @@ export async function getYoutubeSearchResults(query) {
 
 	const videos = response.items.map((item) => {
 		return {
-			title: item.snippet.title,
+			id: item.id.videoId,
+			title: he.decode(item.snippet.title),
+			imageURL: item.snippet.thumbnails.default.url,
+			trackName,
+			trackArtists
 		}
 	})
 

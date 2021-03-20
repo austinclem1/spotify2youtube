@@ -8,6 +8,7 @@ import { getYoutubeSearchResults } from "../../helpers/youtube-helpers"
 import { useEffect, useState } from "react"
 import { useRouter } from "next/router"
 import { useSWRInfinite } from "swr"
+const he = require("he")
 
 export function YoutubeResults(props) {
 	const router = useRouter()

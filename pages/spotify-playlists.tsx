@@ -46,8 +46,8 @@ function TracksTable(props) {
 	const tracks = [].concat(...arrayOfTrackArrays)
 	const tableData = isSelected ? tracks.map(track => 
 		<tr>
-			<td><strong>{track.name}</strong></td>
-			<td><strong>{track.artists}</strong></td>
+			<td>{track.name}</td>
+			<td>{track.artists}</td>
 		</tr>
 	) : tracks.slice(0, reducedTrackCount).map(track =>
 		<tr>
@@ -71,7 +71,7 @@ function TracksTable(props) {
 	}
 	
 	return(
-		<Table striped bordered hover>
+		<Table striped bordered hover className="font-weight-bold">
 			<thead>
 				<tr>
 					<th>Title</th>
@@ -139,14 +139,14 @@ function PlaylistCard(props) {
 		<Col xs={{span: 12}} lg={{span: cardWidth}} className="my-3 mx-0">
 			<Card ref={cardRef} bg={color} className="h-100" onClick={() => selectPlaylist()} key={playlist.id}>
 				<Card.Header className="text-center" as="h4">
-					<strong>{playlist.name}</strong>
+					{playlist.name}
 				</Card.Header>
 				<Card.Body>
 					<Row className="align-middle">
 						<Col xs={isSelected ? {offset: 4, span: 4} : {offset: 3, span: 7}} className="px-3 py-1"><Image src={playlist.image} thumbnail /></Col>
 						<Col xs={12} className="align-self-center">
 							<Card.Text>
-								<p><strong>{`${playlist.totalTracks} tracks`}</strong></p>
+								<p>{`${playlist.totalTracks} tracks`}</p>
 								<div style={{maxHeight: "500px", overflowY: "auto"}}>
 									{isSelected &&
 										<TracksTable 

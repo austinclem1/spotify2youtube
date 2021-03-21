@@ -147,7 +147,6 @@ export async function generateCodeVerifierAndChallenge() {
 	const encoder = new TextEncoder()
 	const verifierArray = encoder.encode(verifier)
 	const hash = await window.crypto.subtle.digest("SHA-256", verifierArray.buffer)
-	const decoder = new TextDecoder()
 	const hashArray = Array.from(new Uint8Array(hash))
 	const hashString = String.fromCharCode(...hashArray)
 	const challenge = stringToBase64URL(hashString)
@@ -195,7 +194,7 @@ export async function getSpotifyUserPlaylists() {
 			}
 		})
 
-	const playlistTrackPromises: Promise<any>[] = playlists.map((playlist) => {
+	const playlistTrackPromises = playlists.map((playlist) => {
 		return getSpotifyPlaylistTracks({
 			id: playlist.id,
 			// limit: process.env.spotifyReducedTrackCount,

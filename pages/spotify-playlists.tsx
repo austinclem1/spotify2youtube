@@ -131,9 +131,8 @@ function PlaylistCard(props) {
 		currentOrder = order - 2
 	}
 	const color = isSelected ? "info" : "light"
-	const cardWidth = isSelected ? 12 : 6
 	return(
-		<Col xs={{span: 12}} lg={{span: cardWidth}} className="my-3 mx-0">
+		<Col xs={{span: 12}} lg={{span: isSelected ? 12 : 6}} className="my-3 mx-0">
 			<Card ref={cardRef} bg={color} className="h-100" onClick={() => selectPlaylist()} key={playlist.id}>
 				<Card.Header className="text-center" as="h4">
 					{playlist.name}

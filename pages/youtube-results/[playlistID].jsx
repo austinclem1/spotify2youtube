@@ -11,10 +11,9 @@ import Spinner from "react-bootstrap/Spinner"
 import Table from "react-bootstrap/Table"
 import { getSomePlaylistTracks } from "../../helpers/spotify-helpers"
 import { getYoutubeSearchResults } from "../../helpers/youtube-helpers"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/router"
 import { useSWRInfinite } from "swr"
-const he = require("he")
 
 export function YoutubeResults(props) {
 	const router = useRouter()
@@ -70,8 +69,8 @@ export function YoutubeResults(props) {
 				<td className="align-middle">{video.trackArtists}</td>
 				<td>
 					<Row className="align-items-center p-3">
-						<Col><Image src={video.imageURL} thumbnail /></Col>
-						<Col>{video.title}</Col>
+						<Col xs={12} md={6}><Image src={video.imageURL} thumbnail /></Col>
+						<Col xs={12} md={6}>{video.title}</Col>
 					</Row>
 				</td>
 			</tr>
@@ -100,7 +99,7 @@ export function YoutubeResults(props) {
 	}
 
 	return (
-		<Container>
+		<Container className="p-5">
 			<Jumbotron className="text-center">
 				<h1>YouTube Search Results</h1>
 			</Jumbotron>
@@ -114,7 +113,7 @@ export function YoutubeResults(props) {
 				</Row>
 			</div>
 			}
-			<Table striped bordered hover className="font-weight-bold m-3">
+			<Table striped bordered hover className="font-weight-bold">
 				<thead>
 					<tr>
 						<th>Song Title</th>
@@ -130,7 +129,7 @@ export function YoutubeResults(props) {
 				<InputGroup size="lg" className="w-25">
 					<FormControl placeholder="Playlist Name" onChange={onChangePlaylistName} />
 				</InputGroup>
-				<Button disabled={data === undefined} onClick={onClickCreatePlaylist} className="m-3">Create YouTube Playlist</Button>
+				<Button disabled={data === undefined} onClick={onClickCreatePlaylist} className="m-1">Create YouTube Playlist</Button>
 			</Navbar>
 		</Container>
 	)

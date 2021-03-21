@@ -99,8 +99,8 @@ export function YoutubeResults(props) {
 	}
 
 	return (
-		<Container className="p-5">
-			<Jumbotron className="text-center">
+		<Container className="text-center p-5">
+			<Jumbotron>
 				<h1>YouTube Search Results</h1>
 			</Jumbotron>
 			{data === undefined &&
@@ -121,7 +121,7 @@ export function YoutubeResults(props) {
 						<th>Video</th>
 					</tr>
 				</thead>
-				<tbody className="text-center">
+				<tbody>
 					{tableBody}
 				</tbody>
 			</Table>

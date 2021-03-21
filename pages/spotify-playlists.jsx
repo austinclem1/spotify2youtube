@@ -187,7 +187,7 @@ function SpotifyPlaylists() {
 	const selectedPlaylistID = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].id : null
 	const selectedPlaylistTotalTracks = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].totalTracks : null
 	return(
-		<Container className="text-center">
+		<Container className="text-center p-5">
 			<Jumbotron>
 				<h1>Choose a Playlist to Convert</h1>
 			</Jumbotron>

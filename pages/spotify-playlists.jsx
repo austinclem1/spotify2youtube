@@ -5,18 +5,14 @@ import Col from "react-bootstrap/Col"
 import Image from "react-bootstrap/Image"
 import Jumbotron from "react-bootstrap/Jumbotron"
 import Link from "next/link"
-import ListGroup from "react-bootstrap/ListGroup"
 import Navbar from "react-bootstrap/Navbar"
-import Pagination from "react-bootstrap/Pagination"
 import Row from "react-bootstrap/Row"
 import Spinner from "react-bootstrap/Spinner"
 import Table from "react-bootstrap/Table"
 import React, { useEffect, useRef, useState } from "react"
 import useSWR, { useSWRInfinite } from "swr"
 
-import { getSpotifyUserPlaylists, getSomePlaylistTracks, getSpotifyAccessToken } from "../helpers/spotify-helpers"
-
-import fetcher from "../libs/fetcher"
+import { getSpotifyUserPlaylists, getSomePlaylistTracks } from "../helpers/spotify-helpers"
 
 function TracksTable(props) {
 	const { playlistID, playlistLength, isSelected } = props
@@ -31,7 +27,7 @@ function TracksTable(props) {
 		return `?playlist-tracks&id=${playlistID}&limit=10&offset=${previousPageData.nextPageOffset}`
 	}
 
-	const { data, error, mutate, size, setSize, isValidating } = useSWRInfinite(
+	const { data, error, size, setSize } = useSWRInfinite(
 		getKey,
 		getSomePlaylistTracks,
 		{
@@ -46,7 +42,6 @@ function TracksTable(props) {
 		}
 	)
 
-	const color = isSelected ? "info" : "light"
 	const arrayOfTrackArrays = data ? data.map(res => res.tracks) : []
 	const tracks = [].concat(...arrayOfTrackArrays)
 	const tableData = isSelected ? tracks.map(track => 
@@ -103,7 +98,7 @@ function TracksTable(props) {
 
 function PlaylistCard(props) {
 	const cardRef = useRef(null)
-	const { playlist, index, order, isSelected, setSelectedPlaylistIndex } = props
+	const { playlist, index, isSelected, setSelectedPlaylistIndex } = props
 
 	const [justSelected, setJustSelected] = useState(false)
 
@@ -126,10 +121,6 @@ function PlaylistCard(props) {
 		}
 	}
 
-	let currentOrder = order
-	if (isSelected && order % 2 === 0) {
-		currentOrder = order - 2
-	}
 	const color = isSelected ? "info" : "light"
 	return(
 		<Col xs={{span: 12}} lg={{span: isSelected ? 12 : 6}} className="my-3 mx-0">
@@ -174,7 +165,7 @@ function SpotifyPlaylists() {
 		// }
 		_setSelectedPlaylistIndex(index)
 	}
-	const { data: playlists, error } = useSWR(
+	const { data: playlists } = useSWR(
 		"spotifyUserPlaylists",
 		getSpotifyUserPlaylists,
 		{
@@ -184,8 +175,6 @@ function SpotifyPlaylists() {
 				errorRetryCount: 3,
 			}
 	)
-	const selectedPlaylistID = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].id : null
-	const selectedPlaylistTotalTracks = selectedPlaylistIndex ? playlists[selectedPlaylistIndex].totalTracks : null
 	return(
 		<Container className="text-center p-5">
 			<Jumbotron>

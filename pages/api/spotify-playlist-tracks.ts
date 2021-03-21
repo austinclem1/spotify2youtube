@@ -41,7 +41,6 @@ export default async function handler(req, res) {
 	}
 	trackResponse = await fetch(spotifyPlaylistsURL.href, spotifyFetchOptions)
 		.then((res) => res.json())
-	console.log(JSON.stringify(trackResponse))
 	const finalResults = trackResponse.items.map((track) => {
 		return {
 			name: track.name,

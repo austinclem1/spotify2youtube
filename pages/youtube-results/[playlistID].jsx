@@ -64,12 +64,16 @@ export function YoutubeResults(props) {
 
 	let tableBody = []
 	if (data) {
-		console.log(JSON.stringify(data))
 		data.forEach(datum => datum.map(video => 
 			<tr>
 				<td className="align-middle">{video.trackName}</td>
 				<td className="align-middle">{video.trackArtists}</td>
-				<td><Row className="align-items-center p-3"><Col><Image src={video.imageURL} thumbnail /></Col><Col>{video.title}</Col></Row></td>
+				<td>
+					<Row className="align-items-center p-3">
+						<Col><Image src={video.imageURL} thumbnail /></Col>
+						<Col>{video.title}</Col>
+					</Row>
+				</td>
 			</tr>
 		).forEach(array => tableBody = tableBody.concat(array)))
 			
@@ -80,7 +84,6 @@ export function YoutubeResults(props) {
 	}
 
 	const onClickCreatePlaylist = () => {
-		console.log("heya");
 		let youtubePlaylistVideos = []
 		data.forEach(datum => datum.map(video => video.id).forEach(array => youtubePlaylistVideos = youtubePlaylistVideos.concat(array)))
 		window.sessionStorage.setItem("youtubePlaylistVideos", JSON.stringify(youtubePlaylistVideos))
@@ -101,7 +104,7 @@ export function YoutubeResults(props) {
 			<Jumbotron className="text-center">
 				<h1>YouTube Search Results</h1>
 			</Jumbotron>
-			{!isReachingEnd &&
+			{data === undefined &&
 			<div>
 				<Row className="justify-content-center">
 					<h5>Loading Playlist Tracks</h5>

@@ -14,7 +14,6 @@ function IndexPage() {
 	useEffect(() => {
 		getSpotifyAccessToken()
 			.then((accessToken) => {
-				console.log(accessToken)
 				if (accessToken === null) {
 					router.replace("/spotify-login")
 				} else {

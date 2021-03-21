@@ -32,13 +32,11 @@ function SpotifyLogin(props) {
 			const oldState = window.localStorage.getItem("spotifyState")
 			if (oldState !== state) {
 				// TODO: redirect on state mismatch
-				console.log("state doesn't match, should get out of here")
 			}
 		}
 		if (code) {
 			const redirectURI = "http://localhost:3000/spotify-login"
 			const codeVerifier = window.localStorage.getItem("spotifyCodeVerifier")
-			console.log("verifier:", codeVerifier)
 			getSpotifyTokensFromCode(code, redirectURI, codeVerifier)
 				.then(([accessToken, refreshToken]) => {
 					if (accessToken && refreshToken) {
@@ -72,8 +70,6 @@ async function userClickedLogin() {
 	window.localStorage.setItem("spotifyState", state)
 	const [codeVerifier, codeChallenge] = await generateCodeVerifierAndChallenge()
 	window.localStorage.setItem("spotifyCodeVerifier", codeVerifier)
-	console.log("verifier:", codeVerifier)
-	console.log("challenge:", codeChallenge)
 	// Request access token from Spotify for access to
 	// user's private and followed playlists
 	// On successful login we are redirected to spotify-playlists page

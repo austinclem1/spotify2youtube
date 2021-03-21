@@ -9,11 +9,8 @@ function CreateYoutubePlaylist(props) {
 		const query = new URLSearchParams(url.hash.slice(1))
 		const accessToken = query.get("access_token")
 		const playlistName = query.get("state")
-		console.log(window.location.search)
-		console.log(query.toString())
 
 		const videoIds = JSON.parse(window.sessionStorage.getItem("youtubePlaylistVideos"))
-		console.log(JSON.stringify(videoIds))
 
 		const fetchOptions = {
 			method: "POST",
@@ -33,7 +30,6 @@ function CreateYoutubePlaylist(props) {
 		const playlistResponse = await fetch(youtubeCreatePlaylistURL.toString(), fetchOptions)
 			.then(res => res.json())
 		const playlistId = playlistResponse.id
-		console.log(JSON.stringify(playlistResponse))
 
 		const youtubeInsertVideoURL = new URL(`https://youtube.googleapis.com/youtube/v3/playlistItems?part=snippet&key=${process.env.youtubeApiKey}`)
 		for (let i = 0; i < videoIds.length; i++) {
@@ -58,7 +54,6 @@ function CreateYoutubePlaylist(props) {
 			}
 			const insertResponse = await fetch(youtubeInsertVideoURL.toString(), insertFetchOptions)
 				.then(res => res.json())
-			console.log(JSON.stringify(insertResponse))
 		}
 	}, []
 )

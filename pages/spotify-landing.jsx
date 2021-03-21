@@ -1,12 +1,11 @@
 import Spinner from "react-bootstrap/Spinner"
 import {
-	getSpotifyAccessToken,
 	getSpotifyUserPlaylists
 } from "../helpers/spotify-helpers"
 import useSWR from "swr"
 
 function SpotifyLanding() {
-	const { data, error } = useSWR("spotifyUserPlaylists", getSpotifyUserPlaylists)
+	const { data } = useSWR("spotifyUserPlaylists", getSpotifyUserPlaylists)
 
 	return (
 		<div>

@@ -46,7 +46,7 @@ function SpotifyLogin(props) {
 		}
 	})
 	return(
-		<Container>
+		<Container className="text-center p-5">
 			<Row className="justify-content-md-center">
 				<h3>Log In to Spotify to Get Started</h3>
 			</Row>

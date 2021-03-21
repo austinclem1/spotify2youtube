@@ -23,7 +23,7 @@ function IndexPage() {
 	})
 
   return (
-		<Container className="text-center">
+		<Container className="text-center p-5">
 			<Head>
 				<title>Spotify2YouTube</title>
 				<meta name="viewport" content="initial-scale=1.0, width=device-width" />

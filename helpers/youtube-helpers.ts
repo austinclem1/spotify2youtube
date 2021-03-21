@@ -1,7 +1,6 @@
 const he = require("he")
 
 export async function getYoutubeSearchResults(query) {
-	console.log("about to fetch youtube search results")
 	const queryParams = new URLSearchParams(query)
 	const maxResults = queryParams.has("maxResults") ? parseInt(queryParams.get("maxResults")) : 5
 	const trackName = queryParams.get("trackName")
@@ -26,7 +25,6 @@ export async function getYoutubeSearchResults(query) {
 	})
 	const youtubeSearchURL = new URL("https://www.googleapis.com/youtube/v3/search")
 	youtubeSearchURL.search = fetchParams.toString()
-	console.log(youtubeSearchURL.toString())
 	let fetchOptions = {
 		method: "GET",
 		headers: {
@@ -45,7 +43,7 @@ export async function getYoutubeSearchResults(query) {
 		return {
 			id: item.id.videoId,
 			title: he.decode(item.snippet.title),
-			imageURL: item.snippet.thumbnails.default.url,
+			imageURL: item.snippet.thumbnails.medium.url,
 			trackName,
 			trackArtists
 		}

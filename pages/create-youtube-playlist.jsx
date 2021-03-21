@@ -1,4 +1,8 @@
+import Button from "react-bootstrap/Button"
 import Container from "react-bootstrap/Container"
+import Col from "react-bootstrap/Col"
+import Row from "react-bootstrap/Row"
+import Link from "next/link"
 import { useEffect } from "react"
 
 
@@ -59,8 +63,15 @@ function CreateYoutubePlaylist(props) {
 )
 
 	return(
-		<Container className="text-center">
-			<h3>Your new YouTube playlist has been created!</h3>
+		<Container className="text-center p-5">
+			<Row className="align-items-center">
+				<Col>
+					<h3>Your new YouTube playlist has been created!</h3>
+					<Link href={"/spotify-playlists"}>
+						<Button>Return to Spotify playlist selection</Button>
+					</Link>
+				</Col>
+			</Row>
 		</Container>
 	)
 }

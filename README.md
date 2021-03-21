@@ -3,8 +3,6 @@
 **Disclamer: This is a tech demo, there are some missing features as this was
 mainly a learning experience**
 
-[Here is a video](http://localhost:3000) demonstrating the app in action.
-
 ### What I learned:
 - Using RESTful APIs
 - Oauth2 authentication

@@ -1,7 +1,6 @@
 # Spotify2YouTube Playlist Converter
 
-**Disclamer: This is a tech demo, there are some missing features as this was
-mainly a learning experience**
+**This is a tech demo I made to deepen my understanding of next.js**
 
 [Here's a video](https://youtu.be/xUq8ZJ9yCXc) of the app in action.
 
